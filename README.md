@@ -20,13 +20,13 @@ Return Summary → Browser TTS
 
 ### Backend (`/backend`)
 
-#### [NEW] [requirements.txt](file:///Users/nag/Desktop/hackthon%20pj/backend/requirements.txt)
+#### [NEW] [requirements.txt](./backend/requirements.txt)
 - `flask`, `flask-cors`, `requests`, `openai`, `python-dotenv`
 
-#### [NEW] [.env](file:///Users/nag/Desktop/hackthon%20pj/backend/.env)
+#### [NEW] [.env](./backend/.env)
 - `NEWSAPI_KEY` and `OPENAI_API_KEY` placeholders (user must fill in)
 
-#### [NEW] [app.py](file:///Users/nag/Desktop/hackthon%20pj/backend/app.py)
+#### [NEW] [app.py](./backend/app.py)
 - Flask app with a single POST endpoint: `POST /get-news`
 - **Request body:** `{ "query": "...", "role": "student|investor|founder" }`
 - **Logic:**
@@ -44,40 +44,40 @@ Return Summary → Browser TTS
 #### [NEW] Vite React project (scaffolded via `npx create-vite`)
 Standard Vite React scaffold in `/frontend`.
 
-#### [NEW] [src/App.jsx](file:///Users/nag/Desktop/hackthon%20pj/frontend/src/App.jsx)
+#### [NEW] [src/App.jsx](./frontend/src/App.jsx)
 - Main layout: header, role selector, mic button, response panel
 - State management for query, role, response, loading, listening
 
-#### [NEW] [src/App.css](file:///Users/nag/Desktop/hackthon%20pj/frontend/src/App.css)
+#### [NEW] [src/App.css](./frontend/src/App.css)
 - Premium dark theme with glassmorphism cards
 - Gradient background, smooth animations
 - Pulsing mic button with active state glow
 
-#### [NEW] [src/components/MicButton.jsx](file:///Users/nag/Desktop/hackthon%20pj/frontend/src/components/MicButton.jsx)
+#### [NEW] [src/components/MicButton.jsx](./frontend/src/components/MicButton.jsx)
 - Large glowing microphone button
 - Uses Web Speech API (`webkitSpeechRecognition`)
 - Falls back to text input if speech not supported
 - Pulse animation while listening
 
-#### [NEW] [src/components/RoleSelector.jsx](file:///Users/nag/Desktop/hackthon%20pj/frontend/src/components/RoleSelector.jsx)
+#### [NEW] [src/components/RoleSelector.jsx](./frontend/src/components/RoleSelector.jsx)
 - Styled segmented control: 🎓 Student · 💼 Investor · 🚀 Founder
 - Updates role state in parent
 
-#### [NEW] [src/components/ResponsePanel.jsx](file:///Users/nag/Desktop/hackthon%20pj/frontend/src/components/ResponsePanel.jsx)
+#### [NEW] [src/components/ResponsePanel.jsx](./frontend/src/components/ResponsePanel.jsx)
 - Displays AI summary with typewriter animation
 - Shows source article links
 - Speaker button to trigger TTS playback
 - Loading skeleton while waiting
 
-#### [NEW] [src/components/TextFallback.jsx](file:///Users/nag/Desktop/hackthon%20pj/frontend/src/components/TextFallback.jsx)
+#### [NEW] [src/components/TextFallback.jsx](./frontend/src/components/TextFallback.jsx)
 - Text input + submit button as fallback when voice is unavailable
 
-#### [NEW] [src/utils/speech.js](file:///Users/nag/Desktop/hackthon%20pj/frontend/src/utils/speech.js)
+#### [NEW] [src/utils/speech.js](./frontend/src/utils/speech.js)
 - `startListening(onResult, onError)` — wraps Web Speech API
 - `speakText(text)` — wraps browser `SpeechSynthesis` TTS
 - `stopSpeaking()` — cancels TTS
 
-#### [NEW] [src/utils/api.js](file:///Users/nag/Desktop/hackthon%20pj/frontend/src/utils/api.js)
+#### [NEW] [src/utils/api.js](./frontend/src/utils/api.js)
 - `fetchNewsSummary(query, role)` → POST to Flask `/get-news`
 
 ---
