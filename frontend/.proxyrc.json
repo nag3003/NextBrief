@@ -1,0 +1,8 @@
+{
+  "/get-news": {
+    "target": "http://localhost:5001"
+  },
+  "/health": {
+    "target": "http://localhost:5001"
+  }
+}
