@@ -112,10 +112,19 @@ TOPIC_FALLBACKS = {
         "investor": "Clean energy investments are at all-time highs. Solar and wind are now cheaper than fossil fuels in most markets. EV adoption is accelerating globally, benefiting battery and charging infrastructure companies. Government incentives (IRA, EU Green Deal) are providing strong tailwinds. This is a decade-long structural trend.",
         "founder": "Climate tech is the next trillion-dollar opportunity. Carbon capture, grid-scale storage, and sustainable materials are attracting significant VC interest. Government subsidies are de-risking many climate ventures. Build for unit economics from day one — investors want climate solutions that are also great businesses.",
     },
+    "sports": {
+        "student": "Sports news snapshot: The sports world is seeing incredible action right now with breaking records and intense match rivalries. For students, engaging in or following sports is a great way to maintain balance and community. Keep an eye on the emerging esports scene as well!",
+        "investor": "Sports industry update: Media rights for major sporting events continue to command premium valuations. Franchises are seeing significant capital appreciation. Sports tech, wearable analytics, and fan engagement platforms represent strong investment opportunities as the sector digitizes further.",
+        "founder": "Sports tech opportunities: The intersection of sports and technology is booming. Wearable biometric trackers, AI-driven coaching apps, and immersive fan experiences in massive sports like cricket and football are highly attractive to VCs. Finding specific niches in amateur sports operations also shows great promise."
+    },
 }
 
 def _get_fallback(query: str, role: str) -> str:
     """Get a fixed fallback response for all queries to ensure a predictable demo."""
+    q_lower = query.lower()
+    for topic, responses in TOPIC_FALLBACKS.items():
+        if topic in q_lower or (topic == "sports" and any(w in q_lower for w in ["cricket", "football", "tennis", "olympics"])):
+            return responses.get(role, responses["student"])
     return "Here is your news update: The tech industry continues to evolve rapidly with new breakthroughs in AI, sustainability, and digital services. Exciting career and investment opportunities are opening up across multiple sectors. Stay curious, build projects, and keep learning — the future belongs to those who adapt!"
 
 def _relative_time(iso_str: str) -> str:
@@ -191,9 +200,19 @@ def _get_fallback_articles(query: str) -> list[dict]:
             "source": source,
             "timeAgo": time_ago,
             "image": image,
-            "url": "",  # No Google News links
+            "url": "",  # No external links
             "description": description,
         }
+
+    q_lower = query.lower()
+    if "sport" in q_lower or "cricket" in q_lower or "football" in q_lower:
+        return [
+            _make_article("Major Cricket Tournament Final Announced", "SportsNet", "2 hours ago", "https://images.unsplash.com/photo-1540747913346-19e32fc3e629?w=400&h=250&fit=crop", "The highly anticipated cricket finals are set to take place next week with record audience expected."),
+            _make_article("Football League Sees Record Goal Scoring Weekend", "Global Sports", "4 hours ago", "https://images.unsplash.com/photo-1518605368461-1eb49de659ca?w=400&h=250&fit=crop", "Strikers across the top leagues break seasonal records in a thrilling weekend of football."),
+            _make_article("New AI Analytics Transforming Athletes' Training", "Tech In Sports", "6 hours ago", "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&h=250&fit=crop", "Teams are increasingly relying on machine learning to optimize performance and prevent injuries."),
+            _make_article("Emerging Tennis Star Shocks the World Number One", "CourtSide", "8 hours ago", "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=400&h=250&fit=crop", "A massive upset in the open tournament as a wild card entrant defeats the top seed."),
+            _make_article("Global Broadcast Rights Re-negotiated for Billions", "Sports Business", "12 hours ago", "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=400&h=250&fit=crop", "Tech giants secure streaming rights for major global sports franchises in a landmark deal."),
+        ]
 
     return [
         _make_article("OpenAI launches GPT-5 with breakthrough reasoning capabilities", "TechCrunch", "2 hours ago", "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=400&h=250&fit=crop", "OpenAI unveils its most powerful model yet, featuring advanced multi-step reasoning and improved coding abilities."),
