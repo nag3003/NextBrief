@@ -338,6 +338,7 @@ def _extract_sentiment(summary: str, role: str) -> dict:
 # API ROUTES
 # ========================
 
+@app.route("/api/get-news", methods=["POST"])
 @app.route("/get-news", methods=["POST"])
 def get_news():
     data = request.get_json(force=True)
@@ -412,6 +413,7 @@ def get_news():
     })
 
 
+@app.route("/api/health", methods=["GET"])
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({

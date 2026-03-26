@@ -2,7 +2,7 @@
  * API utility — communicates with Flask backend
  */
 
-const API_BASE = ''; // Vite proxy handles /get-news → localhost:5000
+const API_BASE = '/api'; // Vite proxy handles /api/get-news -> localhost:5001
 
 export async function fetchNewsSummary(query, role, domain = 'all', language = 'English') {
   const response = await fetch(`${API_BASE}/get-news`, {
