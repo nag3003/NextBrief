@@ -95,22 +95,56 @@ export function speakText(text, onEnd, language = 'English') {
   let voices = window.speechSynthesis.getVoices();
   let langCode = langMap[language] || 'en-US';
 
-  // Voice Selection Strategy: Prioritize 'Google' or 'Microsoft' natural voices
-  let selectedVoice = voices.find(v => v.lang === langCode && v.name.includes('Google')) ||
-                      voices.find(v => v.lang === langCode && v.name.includes('Microsoft')) ||
-                      voices.find(v => v.lang.startsWith(langCode.split('-')[0])) ||
-                      voices[0];
+  const preferredFemaleVoices = [
+    'Google UK English Female', // Excellent clarity
+    'Google US English',        // Often female/clear
+    'Microsoft Zira',           // MS Female
+    'Microsoft Aria',           // MS Natural Female
+    'Samantha',                 // Mac default female
+    'Victoria',                 // Mac clear voice
+    'Karen'                     // Mac AU voice
+  ];
 
-  utterance.voice = selectedVoice;
+  let selectedVoice = null;
+
+  // 1. Try to find a high-quality female English voice
+  if (language === 'English') {
+    for (const name of preferredFemaleVoices) {
+      const voice = voices.find(v => v.name.includes(name));
+      if (voice) {
+        selectedVoice = voice;
+        break;
+      }
+    }
+  }
+
+  // 2. Fallback: look for 'female' in the name for the target language
+  if (!selectedVoice) {
+    selectedVoice = voices.find(v => 
+      v.lang.startsWith(langCode.split('-')[0]) && 
+      v.name.toLowerCase().includes('female')
+    );
+  }
+
+  // 3. Final Fallback: Original logic (Google, Microsoft, or first available)
+  if (!selectedVoice) {
+    selectedVoice = voices.find(v => v.lang === langCode && v.name.includes('Google')) ||
+                    voices.find(v => v.lang === langCode && v.name.includes('Microsoft')) ||
+                    voices.find(v => v.lang.startsWith(langCode.split('-')[0])) ||
+                    voices[0];
+  }
+
+  utterance.voice = selectedVoice || null;
   utterance.lang = langCode;
 
-  // Pronunciation Tuning for regional languages
+  // Pronunciation Tuning for clarity
   if (language !== 'English') {
     utterance.rate = 0.92; // Slightly slower for better clarity
     utterance.pitch = 1.05; // Slightly higher for more natural sound
   } else {
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
+    // English pronunciation tuning
+    utterance.rate = 0.95; // 5% slower for clearer enunciation
+    utterance.pitch = 1.05; // Slightly higher pitch for female tuning
   }
 
   utterance.onstart = () => { window.isSpeaking = true; };
