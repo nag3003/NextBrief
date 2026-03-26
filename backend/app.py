@@ -125,7 +125,17 @@ def _get_fallback(query: str, role: str) -> str:
     for topic, responses in TOPIC_FALLBACKS.items():
         if topic in q_lower or (topic == "sports" and any(w in q_lower for w in ["cricket", "football", "tennis", "olympics"])):
             return responses.get(role, responses["student"])
-    return "Here is your news update: The tech industry continues to evolve rapidly with new breakthroughs in AI, sustainability, and digital services. Exciting career and investment opportunities are opening up across multiple sectors. Stay curious, build projects, and keep learning — the future belongs to those who adapt!"
+            
+    clean_query = query.replace(" news", "").replace("latest ", "").strip().title()
+    if not clean_query:
+        clean_query = "Current Events"
+        
+    if role == "investor":
+        return f"Market update on {clean_query}: The {clean_query} sector is experiencing significant volatility and new investment opportunities. Watch for emerging startups and policy changes that could drive future valuations in this space."
+    elif role == "founder":
+        return f"Industry update on {clean_query}: The {clean_query} space is ripe for disruption. Innovators are finding new ways to capture market share, and VC interest is shifting toward specialized solutions within this vertical."
+    else:
+        return f"Here is your news snapshot for '{clean_query}': There are rapid developments and new trends emerging globally regarding {clean_query}. Whether for academic study or personal interest, staying updated on this topic is essential right now!"
 
 def _relative_time(iso_str: str) -> str:
     """Convert ISO timestamp to relative time like '3 hours ago'."""
@@ -214,13 +224,16 @@ def _get_fallback_articles(query: str) -> list[dict]:
             _make_article("Global Broadcast Rights Re-negotiated for Billions", "Sports Business", "12 hours ago", "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=400&h=250&fit=crop", "Tech giants secure streaming rights for major global sports franchises in a landmark deal."),
         ]
 
+    clean_query = query.replace(" news", "").replace("latest ", "").strip().title()
+    if not clean_query:
+        clean_query = "Global News"
+
     return [
-        _make_article("OpenAI launches GPT-5 with breakthrough reasoning capabilities", "TechCrunch", "2 hours ago", "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=400&h=250&fit=crop", "OpenAI unveils its most powerful model yet, featuring advanced multi-step reasoning and improved coding abilities."),
-        _make_article("India's digital economy set to hit $1 trillion by 2028", "Hindustan Times", "4 hours ago", "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=400&h=250&fit=crop", "Rapid digitization and UPI adoption drive India's digital economy growth trajectory."),
-        _make_article("S&P 500 hits all-time high as tech rally continues", "CNBC", "5 hours ago", "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=250&fit=crop", "Major US indices reach new records as tech and AI stocks continue their upward momentum."),
-        _make_article("Y Combinator's W25 batch includes record number of AI startups", "TechCrunch", "6 hours ago", "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=400&h=250&fit=crop", "Over 60% of YC's latest cohort focuses on AI applications across healthcare, finance, and education."),
-        _make_article("New breakthrough in quantum computing achieves 1000 qubits", "Nature", "8 hours ago", "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=250&fit=crop", "IBM researcher team demonstrates a quantum processor with over 1000 stable qubits."),
-        _make_article("Global renewable energy capacity doubles in record time", "Reuters", "12 hours ago", "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&h=250&fit=crop", "Solar and wind installations surge as costs continue to decline worldwide."),
+        _make_article(f"Breaking Developments in {clean_query}", "Global News", "2 hours ago", "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=250&fit=crop", f"New insights and rapid trends emerging in the world of {clean_query} are capturing global attention today."),
+        _make_article(f"How {clean_query} is Shaping the Future", "Trends & Insights", "4 hours ago", "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=250&fit=crop", f"Industry experts weigh in on the long-term impact of recent {clean_query} events on the broader market."),
+        _make_article(f"Top 5 Things You Need to Know About {clean_query}", "Daily Highlights", "6 hours ago", "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=400&h=250&fit=crop", f"A comprehensive breakdown of the most essential updates regarding {clean_query} this week."),
+        _make_article(f"The Economic Impact of {clean_query}", "Market Watch", "8 hours ago", "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=250&fit=crop", f"Analyzing the financial and social repercussions of the latest shifts in {clean_query}."),
+        _make_article(f"Global Perspectives on {clean_query}", "World Times", "12 hours ago", "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=400&h=250&fit=crop", f"How different nations and leaders are responding to the growing importance of {clean_query}."),
     ]
 
 
