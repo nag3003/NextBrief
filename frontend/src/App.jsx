@@ -452,13 +452,43 @@ export default function App() {
     }
   }, [role, location, domain, selectedLanguage]);
 
+  // --- Fix 1: Get REAL USER LOCATION ---
+  const getUserLocation = useCallback(async () => {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) {
+        resolveLocationViaIP().then(resolve);
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            // Reverse geocoding for city name
+            const res = await fetch(
+              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+            );
+            const data = await res.json();
+            resolve(`${data.city}, ${data.countryName}`);
+          } catch (error) {
+            resolveLocationViaIP().then(resolve);
+          }
+        },
+        async () => {
+          // Fallback to IP-based if blocked
+          resolveLocationViaIP().then(resolve);
+        },
+        { timeout: 10000 }
+      );
+    });
+  }, [resolveLocationViaIP]);
+
   // --- Resolve location via IP as fallback ---
   const resolveLocationViaIP = useCallback(async () => {
     try {
       const data = await fetchLocation();
       if (data.city) {
-        const ipLocation = [data.city, data.region, data.country_name].filter(Boolean).join(', ');
-        return ipLocation;
+        return [data.city, data.region, data.country_name].filter(Boolean).join(', ');
       }
     } catch { /* silent */ }
     return 'India';
@@ -516,21 +546,17 @@ export default function App() {
 
     const cachedLoc = location; // from localStorage init
 
-    // Always resolve real location — never show "Global"
+    // Fix 1: Use it in your UI on mount
     const startWithLocation = async () => {
       let resolvedLoc = cachedLoc;
 
-      // If no cached location, resolve via IP immediately
       if (!cachedLoc || cachedLoc === 'Global' || cachedLoc === '') {
         setLocationLoading(true);
-        resolvedLoc = await resolveLocationViaIP();
-        if (resolvedLoc && resolvedLoc !== 'Global') {
-          updateLocation(resolvedLoc);
-        }
+        resolvedLoc = await getUserLocation();
       }
 
-      const useLoc = (resolvedLoc && resolvedLoc !== 'Global') ? resolvedLoc : 'India';
-      if (!cachedLoc) updateLocation(useLoc);
+      const useLoc = resolvedLoc || 'India';
+      updateLocation(useLoc);
       handleQuery('latest news', useLoc);
       fetchWeather(useLoc);
       setLocationLoading(false);

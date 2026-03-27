@@ -76,67 +76,17 @@ def get_system_prompt(role: str, domain: str, language: str) -> str:
     return base + persona + context + instruction
 
 # --- Hardcoded fallbacks: topic × role matrix for demo safety ---
-TOPIC_FALLBACKS = {
-    "ai": {
-        "student": "AI is transforming education rapidly. Google and Microsoft are launching free AI courses, and universities are adding machine learning to core curricula. Internship demand for AI skills has jumped 3x this year. If you're a student, start with Python and TensorFlow — the job market is red hot.",
-        "investor": "The AI sector continues to attract massive capital — over $50B invested in the last quarter alone. Key players like NVIDIA, OpenAI, and Anthropic are driving valuations up. Enterprise AI adoption is hitting an inflection point, but regulatory risks are mounting. Watch for consolidation in the AI infrastructure layer.",
-        "founder": "AI startup competition is fierce but opportunities abound. Vertical AI (healthcare, legal, finance) is where the whitespace is. VCs are favoring AI startups with proprietary data advantages over generic chatbot wrappers. Focus on a niche, build a data moat, and show clear ROI to customers.",
-    },
-    "stock": {
-        "student": "Stock markets are seeing volatility due to mixed earnings reports and changing interest rate expectations. Tech stocks remain strong, driven by AI enthusiasm. For students learning about investing, this is a great time to study how macroeconomic factors affect market sentiment. Consider paper trading to practice!",
-        "investor": "Markets are in a rotation phase — growth stocks are outperforming value amid AI tailwinds. The S&P 500 is up 12% YTD, led by the Magnificent 7. Bond yields are stabilizing, which may support equity valuations. Key risks: geopolitical tensions and a potential Fed pause could trigger near-term corrections.",
-        "founder": "Public market trends signal strong exit opportunities for well-positioned startups. IPO windows are reopening, especially for profitable tech companies. If you're planning a future exit, focus on achieving positive unit economics now. Acqui-hires are also increasing as big tech hunts for AI talent.",
-    },
-    "startup": {
-        "student": "The startup ecosystem is booming! Y Combinator's latest batch had record applications, and student-founded startups are getting funded faster than ever. Key hot sectors: AI tools, climate tech, and health tech. Start building side projects now — many successful founders started as student hackers!",
-        "investor": "Early-stage startup funding is rebounding after the 2023 correction. Seed rounds are averaging $3-5M, and Series A deals require stronger traction metrics. AI-first startups dominate deal flow, but sustainability and fintech are resurging. Due diligence cycle times have shortened — move fast on promising deals.",
-        "founder": "Funding landscape update: Seed rounds are flowing again, but investors want to see revenue traction earlier. The median time to Series A has stretched to 24 months. Focus on capital efficiency and achieving $1M ARR before raising. Strategic angels and micro-VCs are often better first checks than big funds.",
-    },
-    "economy": {
-        "student": "The global economy is in a transitional phase. Inflation is cooling in most major economies, while job markets remain surprisingly strong. For students, this means good employment prospects upon graduation, especially in tech and healthcare. Understanding macroeconomics will give you an edge in any career path.",
-        "investor": "Economic indicators are mixed. GDP growth is slowing but resilient, unemployment remains historically low, and inflation is trending toward central bank targets. The Fed may pivot to rate cuts, which could fuel the next bull run. Defensive positioning with selective risk exposure is the prudent play.",
-        "founder": "Economic conditions are favorable for lean startups. Customer acquisition costs are dropping as ad markets normalize. Enterprise budgets are shifting toward efficiency and automation tools — position your product there. Cash management remains critical; aim for 18+ months of runway in the current environment.",
-    },
-    "health": {
-        "student": "Healthcare innovation is accelerating! AI-powered diagnostics, telemedicine, and personalized medicine are creating new career opportunities. Biotech companies are hiring data scientists and engineers like never before. If you're interested in health tech, combining CS with biology knowledge is an incredibly powerful skill combination.",
-        "investor": "Healthcare and biotech are showing strong momentum. GLP-1 drugs continue to dominate with massive market potential. AI-driven drug discovery is cutting development timelines from years to months. Digital health stocks have been undervalued post-2022 correction, presenting entry opportunities. Watch regulatory approvals closely.",
-        "founder": "Health tech is a massive opportunity space. AI diagnostics, remote patient monitoring, and mental health platforms are seeing strong demand. FDA pathways for AI/ML-based Software as Medical Devices (SaMD) are becoming clearer. Focus on clinical validation and insurance reimbursement strategy early.",
-    },
-    "crypto": {
-        "student": "Cryptocurrency and blockchain technology continue to evolve. Bitcoin ETFs are now mainstream, and Web3 development skills are in demand. Understanding blockchain fundamentals can open doors in fintech, gaming, and decentralized applications. Many universities now offer blockchain courses — it's worth exploring!",
-        "investor": "Crypto markets are in a new cycle. Bitcoin ETFs have attracted institutional capital, pushing BTC past previous resistance levels. Ethereum's DeFi ecosystem is maturing with real yield products. Key risks: regulatory clarity is still evolving, and altcoin speculation remains high. Position sizing and risk management are essential.",
-        "founder": "Blockchain infrastructure is maturing, creating opportunities for builder-founders. DeFi, real-world asset tokenization, and decentralized identity are hot verticals. VC funding for crypto startups is returning but with higher bars. Focus on real utility over token speculation to attract serious investors.",
-    },
-    "climate": {
-        "student": "Climate tech is one of the fastest-growing sectors! Clean energy jobs are booming, and companies are actively hiring sustainability-focused engineers and scientists. Solar and EV industries are projected to grow 5x in the next decade. Green skills will be essential for the future workforce — start building them now.",
-        "investor": "Clean energy investments are at all-time highs. Solar and wind are now cheaper than fossil fuels in most markets. EV adoption is accelerating globally, benefiting battery and charging infrastructure companies. Government incentives (IRA, EU Green Deal) are providing strong tailwinds. This is a decade-long structural trend.",
-        "founder": "Climate tech is the next trillion-dollar opportunity. Carbon capture, grid-scale storage, and sustainable materials are attracting significant VC interest. Government subsidies are de-risking many climate ventures. Build for unit economics from day one — investors want climate solutions that are also great businesses.",
-    },
-    "sports": {
-        "student": "Sports news snapshot: The sports world is seeing incredible action right now with breaking records and intense match rivalries. For students, engaging in or following sports is a great way to maintain balance and community. Keep an eye on the emerging esports scene as well!",
-        "investor": "Sports industry update: Media rights for major sporting events continue to command premium valuations. Franchises are seeing significant capital appreciation. Sports tech, wearable analytics, and fan engagement platforms represent strong investment opportunities as the sector digitizes further.",
-        "founder": "Sports tech opportunities: The intersection of sports and technology is booming. Wearable biometric trackers, AI-driven coaching apps, and immersive fan experiences in massive sports like cricket and football are highly attractive to VCs. Finding specific niches in amateur sports operations also shows great promise."
-    },
-}
-
 def _get_fallback(query: str, role: str) -> str:
-    """Get a fixed fallback response for all queries to ensure a predictable demo."""
-    q_lower = query.lower()
-    for topic, responses in TOPIC_FALLBACKS.items():
-        if topic in q_lower or (topic == "sports" and any(w in q_lower for w in ["cricket", "football", "tennis", "olympics"])):
-            return responses.get(role, responses["student"])
-            
+    """Get a dynamic fallback response when NewsAPI returns nothing and OpenAI is unavailable."""
     clean_query = query.replace(" news", "").replace("latest ", "").strip().title()
     if not clean_query:
         clean_query = "Current Events"
         
-    if role == "investor":
-        return f"Market update on {clean_query}: The {clean_query} sector is experiencing significant volatility with new institutional interest and emerging policy changes. Industry leaders are pivoting toward the latest trends in {clean_query} to secure future valuations. For a serious investor, watch for key technical indicators and startup scaling in this space."
-    elif role == "founder":
-        return f"Founder's insight on {clean_query}: The {clean_query} space is ripe for high-impact innovation right now. New competitors are entering the {clean_query} vertical with specialized solutions, and VC focus is shifting toward capital-efficient growth. If you are building in {clean_query}, focus on early differentiation and a clear path to profitability."
-    else:
-        # Student / General
-        return f"Educational snapshot for '{clean_query}': There are rapid developments and new technical trends emerging regarding {clean_query}. Whether for academic research or career growth, stays updated on the fundamental shifts in {clean_query} is essential for success in today's market. Explore the core principles and recent news articles below to deepen your expertise."
+    return (
+        f"NexBrief Analysis on {clean_query}: We are currently seeing high volatility and rapid shifts in the {clean_query} space. "
+        f"For a {role}, it's critical to monitor emerging patterns in {clean_query} and how they intersect with global trends. "
+        "Check the related videos below for more context while we refresh the real-time news feed."
+    )
 
 def _relative_time(iso_str: str) -> str:
     """Convert ISO timestamp to relative time like '3 hours ago'."""
@@ -389,52 +339,31 @@ def get_news():
     user_location = data.get("location", "Global")
 
     # 1. Fetch news articles
-    # Smarter regional query building using user location
+    # Fix 2 & 3: Combine Query + Location (User's Recommended Product Architecture)
     api_query = query
-    
-    # Inject location context for local/regional queries
     if user_location and user_location != "Global":
         loc_city = user_location.split(",")[0].strip()
-        if domain == "local" and loc_city.lower() not in api_query.lower():
-            api_query = f"{loc_city} {api_query}"
-        elif domain == "all" and loc_city.lower() not in api_query.lower():
-            # Lightly hint at location for general queries
+        if loc_city.lower() not in api_query.lower():
             api_query = f"{api_query} {loc_city}"
     
-    if language != "English":
-        # Add English translation hint for NewsAPI (which is mostly English content)
-        lang_hints = {
-            "Hindi": "India Hindi news",
-            "Tamil": "India Tamil news",
-            "Telugu": "India Telugu news",
-            "Malayalam": "India Kerala Malayalam news",
-            "Kannada": "India Karnataka Kannada news",
-            "Bengali": "India Bengal Bengali news",
-            "Marathi": "India Maharashtra Marathi news",
-            "Gujarati": "India Gujarat Gujarati news",
-            "Odia": "India Odisha Odia news",
-            "Urdu": "India Urdu news",
-        }
-        hint = lang_hints.get(language, f"India {language} news")
-        api_query = f"{query} {hint}"
-    
+    # Domain-specific enrichment
     if domain != "all" and domain not in api_query.lower():
         api_query = f"{api_query} {domain}"
     
-    print(f"[*] Query: '{query}' | Location: '{user_location}' | API Query: '{api_query}'", flush=True)
+    # Language-specific enrichment for NewsAPI effectiveness
+    if language != "English":
+        lang_hints = {"Hindi": "India Hindi", "Tamil": "India Tamil", "Telugu": "India Telugu"}
+        hint = lang_hints.get(language, f"India {language}")
+        if hint.lower() not in api_query.lower():
+            api_query = f"{api_query} {hint}"
+
+    print(f"[*] Raw Query: '{query}' | Location: '{user_location}' | Final NewsAPI Query: '{api_query}'", flush=True)
     articles = fetch_news(api_query)
     
-    # CASCADING FALLBACK: If hyper-local regional query fails, broaden the scope
-    # e.g., "Jammikunta, Telangana, India news" -> "Telangana, India news" -> "India news"
-    fallback_query = query
-    while not articles and ", " in fallback_query:
-        parts = fallback_query.split(", ", 1)
-        if len(parts) > 1:
-            fallback_query = parts[1]
-            print(f"[*] NewsAPI found 0 articles. Broadening query recursively: {fallback_query}", flush=True)
-            articles = fetch_news(fallback_query)
-        else:
-            break
+    # Direct fallback if raw query + city fails: try just the query
+    if not articles and api_query != query:
+        print(f"[*] NewsAPI found 0 articles for '{api_query}'. Trying raw query: '{query}'", flush=True)
+        articles = fetch_news(query)
 
     if not articles:
         articles = _get_fallback_articles(query)
