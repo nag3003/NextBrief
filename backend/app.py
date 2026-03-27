@@ -306,32 +306,36 @@ def _get_dynamic_mock_summary(articles: list[dict], query: str) -> str:
 
 def summarize_with_gpt(articles: list[dict], role: str, query: str = "", domain: str = "all", language: str = "English") -> str:
     """Summarize articles using OpenAI GPT, tailored to role, domain, and language."""
+    # Detect if articles are real (have URLs) or fallback placeholders
+    has_real_articles = any(a.get("url") for a in articles)
+
     if not client:
-        if any(a.get("url") for a in articles):  # These are real articles from NewsAPI
+        if has_real_articles:
             return _get_dynamic_mock_summary(articles, query)
         return _get_fallback(query, role)
 
-    article_text = "\n\n".join(
-        f"{a['title']} ({a['source']})\n{a['description'] or 'No description available.'}"
-        for a in articles
-    )
-
-    if not article_text.strip():
-        article_text = "No specific articles were found."
-
     system_prompt = get_system_prompt(role, domain, language)
-    
-    is_fallback = articles and "OpenAI launches GPT-5" in articles[0].get("title", "")
-    
-    if is_fallback or not articles:
+
+    if has_real_articles:
+        # Real articles from NewsAPI — summarize them
+        article_text = "\n\n".join(
+            f"{a['title']} ({a['source']})\n{a['description'] or 'No description available.'}"
+            for a in articles
+        )
         user_prompt = (
             f"The user asked about: '{query}'.\n\n"
-            "Your internal knowledge might be limited for real-time events, but please provide a highly intelligent, "
-            f"analytical summary based on the latest available context for a {role}. "
-            f"If you have the provided articles below, use them as current context even if the query is slightly different:\n\n{article_text}"
+            f"Here are the latest real-time news articles. Summarize the key points:\n\n{article_text}"
         )
     else:
-        user_prompt = f"The user asked about: '{query}'.\n\nHere are the latest real-time news articles. Summarize the key points:\n\n{article_text}"
+        # No real articles — use GPT's own knowledge to answer the specific query
+        user_prompt = (
+            f"The user asked about: '{query}'.\n\n"
+            "No real-time articles were found for this query. "
+            f"Using your own knowledge, provide a highly relevant, specific, and insightful analysis about '{query}' "
+            f"tailored for a {role}. "
+            "Do NOT give a generic overview — focus specifically on what the user asked. "
+            f"Be concrete with facts, names, numbers, and recent developments you know about regarding '{query}'."
+        )
 
     try:
         response = client.chat.completions.create(
@@ -378,10 +382,21 @@ def get_news():
     role = data.get("role", "student").lower()
     domain = data.get("domain", "all").lower()
     language = data.get("language", "English")
+    user_location = data.get("location", "Global")
 
     # 1. Fetch news articles
-    # Smarter regional query building
+    # Smarter regional query building using user location
     api_query = query
+    
+    # Inject location context for local/regional queries
+    if user_location and user_location != "Global":
+        loc_city = user_location.split(",")[0].strip()
+        if domain == "local" and loc_city.lower() not in api_query.lower():
+            api_query = f"{loc_city} {api_query}"
+        elif domain == "all" and loc_city.lower() not in api_query.lower():
+            # Lightly hint at location for general queries
+            api_query = f"{api_query} {loc_city}"
+    
     if language != "English":
         # Add English translation hint for NewsAPI (which is mostly English content)
         lang_hints = {
@@ -402,6 +417,7 @@ def get_news():
     if domain != "all" and domain not in api_query.lower():
         api_query = f"{api_query} {domain}"
     
+    print(f"[*] Query: '{query}' | Location: '{user_location}' | API Query: '{api_query}'", flush=True)
     articles = fetch_news(api_query)
     
     # CASCADING FALLBACK: If hyper-local regional query fails, broaden the scope
@@ -443,6 +459,20 @@ def get_news():
         "language": language,
         "is_developing": False,
     })
+
+
+@app.route("/api/get-location", methods=["GET"])
+@app.route("/get-location", methods=["GET"])
+def get_location():
+    try:
+        # Resolve location via IP on the backend (no CORS issues)
+        response = requests.get('https://ipapi.co/json/', timeout=5)
+        if response.status_code == 200:
+            return jsonify(response.json())
+        return jsonify({"city": "Hyderabad", "region": "Telangana", "country_name": "India"})
+    except Exception as e:
+        print(f"[Location Error] {e}")
+        return jsonify({"city": "Hyderabad", "region": "Telangana", "country_name": "India"})
 
 
 @app.route("/api/health", methods=["GET"])

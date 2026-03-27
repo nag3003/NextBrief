@@ -3,7 +3,7 @@ import RoleSelector from './components/RoleSelector';
 import MicButton from './components/MicButton';
 import TextFallback from './components/TextFallback';
 import ResponsePanel from './components/ResponsePanel';
-import { fetchNewsSummary } from './utils/api';
+import { fetchNewsSummary, fetchLocation } from './utils/api';
 import { startListening, speakText, stopSpeaking } from './utils/speech';
 
 // Dynamic suggestions per role
@@ -356,20 +356,30 @@ export default function App() {
     catch { return []; }
   });
 
-  const [location, setLocation] = useState('Global');
+  const [location, setLocation] = useState(() => {
+    try { return localStorage.getItem('newsai-location') || ''; }
+    catch { return ''; }
+  });
   const [weather, setWeather] = useState(null);
   const [domain, setDomain] = useState('all');
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [showSaved, setShowSaved] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(true);
   const geoFetchedRef = useRef(false);
 
   const recognitionRef = useRef(null);
+
+  // Helper to update location + persist it
+  const updateLocation = useCallback((loc) => {
+    setLocation(loc);
+    try { localStorage.setItem('newsai-location', loc); } catch {}
+  }, []);
 
   // --- Fetch Weather ---
   const fetchWeather = useCallback(async (loc) => {
     try {
       let city;
-      if (!loc || loc === 'Global') {
+      if (!loc || loc === 'Global' || loc === '') {
         // Use IP-based location for weather when geolocation is denied
         try {
           const ipRes = await fetch('https://ipapi.co/json/');
@@ -377,7 +387,7 @@ export default function App() {
           city = ipData.city || 'Hyderabad';
           if (ipData.city) {
             const ipLocation = [ipData.city, ipData.region, ipData.country_name].filter(Boolean).join(', ');
-            setLocation(ipLocation);
+            updateLocation(ipLocation);
           }
         } catch {
           city = 'Hyderabad';
@@ -402,16 +412,19 @@ export default function App() {
   // overrideDomain lets category clicks pass the NEW domain immediately
   const handleQuery = useCallback(async (q, overrideLoc = location, overrideDomain) => {
     const activeDomain = overrideDomain || domain;
-    // Build a smart query: if user typed nothing, derive from domain
+    const activeLoc = overrideLoc || location;
+    const city = activeLoc.split(',')[0].trim();
+
+    // Build a smart query: if user typed nothing, derive from domain + location
     const DOMAIN_QUERIES = {
-      all: 'latest news',
+      all: city !== 'Global' ? `latest news near ${city}` : 'latest news',
       india: 'India latest news today',
       world: 'world international news today',
-      local: `${location} local news today`,
-      business: 'business finance market news',
+      local: `${activeLoc} local news today`,
+      business: city !== 'Global' ? `business finance news ${city}` : 'business finance market news',
       technology: 'technology AI software news',
-      entertainment: 'entertainment movies arts news',
-      sports: 'sports cricket football news',
+      entertainment: city !== 'Global' ? `entertainment arts news ${city}` : 'entertainment movies arts news',
+      sports: city !== 'Global' ? `sports news ${city}` : 'sports cricket football news',
       science: 'science space research news',
       health: 'health medical wellness news',
     };
@@ -425,7 +438,7 @@ export default function App() {
     setSpeaking(false);
 
     try {
-      const data = await fetchNewsSummary(finalQ, role, activeDomain, selectedLanguage);
+      const data = await fetchNewsSummary(finalQ, role, activeDomain, selectedLanguage, activeLoc);
       setResponse(data);
       if (data.summary) {
         setSpeaking(true);
@@ -439,15 +452,93 @@ export default function App() {
     }
   }, [role, location, domain, selectedLanguage]);
 
-  // --- Geolocation ---
+  // --- Resolve location via IP as fallback ---
+  const resolveLocationViaIP = useCallback(async () => {
+    try {
+      const data = await fetchLocation();
+      if (data.city) {
+        const ipLocation = [data.city, data.region, data.country_name].filter(Boolean).join(', ');
+        return ipLocation;
+      }
+    } catch { /* silent */ }
+    return 'India';
+  }, []);
+
+  // --- Refresh location on demand ---
+  const refreshLocation = useCallback(async () => {
+    setLocationLoading(true);
+    try {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            try {
+              const lat = position.coords.latitude;
+              const lon = position.coords.longitude;
+              const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+              const data = await res.json();
+              const parts = [data.city, data.principalSubdivision, data.countryName].filter(Boolean);
+              const exactLocation = parts.length > 0 ? parts.join(', ') : 'Global';
+              updateLocation(exactLocation);
+              fetchWeather(exactLocation);
+              handleQuery('', exactLocation);
+            } catch {
+              const ipLoc = await resolveLocationViaIP();
+              updateLocation(ipLoc);
+              fetchWeather(ipLoc);
+            }
+            setLocationLoading(false);
+          },
+          async () => {
+            // Geolocation denied — use IP fallback
+            const ipLoc = await resolveLocationViaIP();
+            updateLocation(ipLoc);
+            fetchWeather(ipLoc);
+            handleQuery('', ipLoc);
+            setLocationLoading(false);
+          },
+          { timeout: 8000 }
+        );
+      } else {
+        const ipLoc = await resolveLocationViaIP();
+        updateLocation(ipLoc);
+        fetchWeather(ipLoc);
+        setLocationLoading(false);
+      }
+    } catch {
+      setLocationLoading(false);
+    }
+  }, [updateLocation, fetchWeather, handleQuery, resolveLocationViaIP]);
+
+  // --- Geolocation on mount ---
   useEffect(() => {
     if (geoFetchedRef.current) return;
     geoFetchedRef.current = true;
 
-    // Initial fetch
-    handleQuery('latest news', 'Global');
-    fetchWeather('Global');
+    const cachedLoc = location; // from localStorage init
 
+    // Always resolve real location — never show "Global"
+    const startWithLocation = async () => {
+      let resolvedLoc = cachedLoc;
+
+      // If no cached location, resolve via IP immediately
+      if (!cachedLoc || cachedLoc === 'Global' || cachedLoc === '') {
+        setLocationLoading(true);
+        resolvedLoc = await resolveLocationViaIP();
+        if (resolvedLoc && resolvedLoc !== 'Global') {
+          updateLocation(resolvedLoc);
+        }
+      }
+
+      const useLoc = (resolvedLoc && resolvedLoc !== 'Global') ? resolvedLoc : 'India';
+      if (!cachedLoc) updateLocation(useLoc);
+      handleQuery('latest news', useLoc);
+      fetchWeather(useLoc);
+      setLocationLoading(false);
+    };
+
+    startWithLocation();
+
+    // Then try to get fresh precise GPS location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -460,8 +551,8 @@ export default function App() {
             const parts = [data.city, data.principalSubdivision, data.countryName].filter(Boolean);
             const exactLocation = parts.length > 0 ? parts.join(', ') : 'Global';
 
-            if (exactLocation !== 'Global') {
-              setLocation(exactLocation);
+            if (exactLocation !== 'Global' && exactLocation !== cachedLoc) {
+              updateLocation(exactLocation);
               fetchWeather(exactLocation);
               handleQuery(query || 'latest news', exactLocation);
             }
@@ -469,11 +560,29 @@ export default function App() {
             console.warn('[Location Error]', e);
           }
         },
-        (error) => console.log('[Location Denied]', error),
+        async () => {
+          // Geolocation denied — try IP fallback if no cache
+          if (!cachedLoc || cachedLoc === 'Global') {
+            const ipLoc = await resolveLocationViaIP();
+            if (ipLoc !== 'Global') {
+              updateLocation(ipLoc);
+              fetchWeather(ipLoc);
+              handleQuery('latest news', ipLoc);
+            }
+          }
+        },
         { timeout: 8000 }
       );
+    } else if (!cachedLoc || cachedLoc === 'Global') {
+      // No geolocation API — use IP
+      resolveLocationViaIP().then(ipLoc => {
+        if (ipLoc !== 'Global') {
+          updateLocation(ipLoc);
+          fetchWeather(ipLoc);
+        }
+      });
     }
-  }, [handleQuery, fetchWeather, query]);
+  }, [handleQuery, fetchWeather, query, updateLocation, resolveLocationViaIP]);
 
   // --- Mic toggle ---
   const handleMicToggle = useCallback(() => {
@@ -511,7 +620,15 @@ export default function App() {
     localStorage.setItem('newsai-briefing', JSON.stringify(updated));
   }, [savedItems]);
 
-  const suggestions = ROLE_SUGGESTIONS[role] || ROLE_SUGGESTIONS.all;
+  // Build location-aware suggestions
+  const city = location.split(',')[0].trim();
+  const baseSuggestions = ROLE_SUGGESTIONS[role] || ROLE_SUGGESTIONS.all;
+  const locationSuggestions = (city && city !== 'Global') ? [
+    { icon: '📍', text: `Latest news in ${city}` },
+    { icon: '🏙️', text: `What's happening in ${city} today` },
+    ...baseSuggestions.slice(0, 4),
+  ] : baseSuggestions;
+  const suggestions = locationSuggestions;
 
   return (
     <>
@@ -604,12 +721,19 @@ export default function App() {
 
         {/* Compact Status Strip */}
         <div className="status-strip">
-          <div className="status-strip__item">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-              <circle cx="12" cy="10" r="3" />
+          <div className="status-strip__item status-strip__location" onClick={refreshLocation} title="Click to refresh location" style={{ cursor: 'pointer' }}>
+            {locationLoading ? (
+              <span className="location-spinner">⟳</span>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+            )}
+            <span>{locationLoading ? 'Detecting location...' : (location || 'Detecting location...')}</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ opacity: 0.5 }}>
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
             </svg>
-            <span>{location}</span>
           </div>
           {domain !== 'all' && (
             <div className="status-strip__domain">

@@ -1,8 +1,5 @@
 {
-  "/get-news": {
-    "target": "http://localhost:5001"
-  },
-  "/health": {
+  "/api": {
     "target": "http://localhost:5001"
   }
 }
