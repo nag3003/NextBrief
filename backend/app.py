@@ -131,11 +131,12 @@ def _get_fallback(query: str, role: str) -> str:
         clean_query = "Current Events"
         
     if role == "investor":
-        return f"Market update on {clean_query}: The {clean_query} sector is experiencing significant volatility and new investment opportunities. Watch for emerging startups and policy changes that could drive future valuations in this space."
+        return f"Market update on {clean_query}: The {clean_query} sector is experiencing significant volatility with new institutional interest and emerging policy changes. Industry leaders are pivoting toward the latest trends in {clean_query} to secure future valuations. For a serious investor, watch for key technical indicators and startup scaling in this space."
     elif role == "founder":
-        return f"Industry update on {clean_query}: The {clean_query} space is ripe for disruption. Innovators are finding new ways to capture market share, and VC interest is shifting toward specialized solutions within this vertical."
+        return f"Founder's insight on {clean_query}: The {clean_query} space is ripe for high-impact innovation right now. New competitors are entering the {clean_query} vertical with specialized solutions, and VC focus is shifting toward capital-efficient growth. If you are building in {clean_query}, focus on early differentiation and a clear path to profitability."
     else:
-        return f"Here is your news snapshot for '{clean_query}': There are rapid developments and new trends emerging globally regarding {clean_query}. Whether for academic study or personal interest, staying updated on this topic is essential right now!"
+        # Student / General
+        return f"Educational snapshot for '{clean_query}': There are rapid developments and new technical trends emerging regarding {clean_query}. Whether for academic research or career growth, stays updated on the fundamental shifts in {clean_query} is essential for success in today's market. Explore the core principles and recent news articles below to deepen your expertise."
 
 def _relative_time(iso_str: str) -> str:
     """Convert ISO timestamp to relative time like '3 hours ago'."""
@@ -204,24 +205,25 @@ def fetch_news(query: str) -> list[dict]:
 
 def _get_fallback_articles(query: str) -> list[dict]:
     """Generate fixed fallback articles for demo to ensure predictable behavior without external links."""
-    def _make_article(title, source, time_ago, image, description=""):
+    def _make_article(title, source, time_ago, image, description="", url=""):
         return {
             "title": title,
             "source": source,
             "timeAgo": time_ago,
             "image": image,
-            "url": "",  # No external links
+            "url": url,
             "description": description,
+            "is_fallback": True
         }
 
     q_lower = query.lower()
     if "sport" in q_lower or "cricket" in q_lower or "football" in q_lower:
         return [
-            _make_article("Major Cricket Tournament Final Announced", "SportsNet", "2 hours ago", "https://images.unsplash.com/photo-1540747913346-19e32fc3e629?w=400&h=250&fit=crop", "The highly anticipated cricket finals are set to take place next week with record audience expected."),
-            _make_article("Football League Sees Record Goal Scoring Weekend", "Global Sports", "4 hours ago", "https://images.unsplash.com/photo-1518605368461-1eb49de659ca?w=400&h=250&fit=crop", "Strikers across the top leagues break seasonal records in a thrilling weekend of football."),
-            _make_article("New AI Analytics Transforming Athletes' Training", "Tech In Sports", "6 hours ago", "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&h=250&fit=crop", "Teams are increasingly relying on machine learning to optimize performance and prevent injuries."),
-            _make_article("Emerging Tennis Star Shocks the World Number One", "CourtSide", "8 hours ago", "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=400&h=250&fit=crop", "A massive upset in the open tournament as a wild card entrant defeats the top seed."),
-            _make_article("Global Broadcast Rights Re-negotiated for Billions", "Sports Business", "12 hours ago", "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=400&h=250&fit=crop", "Tech giants secure streaming rights for major global sports franchises in a landmark deal."),
+            _make_article("Major Cricket Tournament Final Announced", "SportsNet", "2 hours ago", "https://images.unsplash.com/photo-1540747913346-19e32fc3e629?w=400&h=250&fit=crop", "The highly anticipated cricket finals are set to take place next week with record audience expected.", "https://www.espncricinfo.com"),
+            _make_article("Football League Sees Record Goal Scoring Weekend", "Global Sports", "4 hours ago", "https://images.unsplash.com/photo-1518605368461-1eb49de659ca?w=400&h=250&fit=crop", "Strikers across the top leagues break seasonal records in a thrilling weekend of football.", "https://www.bbc.com/sport/football"),
+            _make_article("New AI Analytics Transforming Athletes' Training", "Tech In Sports", "6 hours ago", "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&h=250&fit=crop", "Teams are increasingly relying on machine learning to optimize performance and prevent injuries.", "https://www.wired.com/category/sport/"),
+            _make_article("Emerging Tennis Star Shocks the World Number One", "CourtSide", "8 hours ago", "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=400&h=250&fit=crop", "A massive upset in the open tournament as a wild card entrant defeats the top seed.", "https://www.atptour.com"),
+            _make_article("Global Broadcast Rights Re-negotiated for Billions", "Sports Business", "12 hours ago", "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=400&h=250&fit=crop", "Tech giants secure streaming rights for major global sports franchises in a landmark deal.", "https://www.sportspromedia.com"),
         ]
 
     clean_query = query.replace(" news", "").replace("latest ", "").strip().title()
@@ -229,10 +231,11 @@ def _get_fallback_articles(query: str) -> list[dict]:
         clean_query = "Global News"
 
     return [
-        _make_article(f"Breaking Developments in {clean_query}", "Global News", "2 hours ago", "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=250&fit=crop", f"New insights and rapid trends emerging in the world of {clean_query} are capturing global attention today."),
-        _make_article(f"How {clean_query} is Shaping the Future", "Trends & Insights", "4 hours ago", "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=250&fit=crop", f"Industry experts weigh in on the long-term impact of recent {clean_query} events on the broader market."),
-        _make_article(f"Top 5 Things You Need to Know About {clean_query}", "Daily Highlights", "6 hours ago", "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=400&h=250&fit=crop", f"A comprehensive breakdown of the most essential updates regarding {clean_query} this week."),
-        _make_article(f"The Economic Impact of {clean_query}", "Market Watch", "8 hours ago", "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=250&fit=crop", f"Analyzing the financial and social repercussions of the latest shifts in {clean_query}."),
+        _make_article(f"Breaking Developments in {clean_query}", "Global News", "2 hours ago", "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=250&fit=crop", f"New insights and rapid trends emerging in the world of {clean_query} are capturing global attention today.", "https://www.reuters.com"),
+        _make_article(f"How {clean_query} is Shaping the Future", "Trends & Insights", "4 hours ago", "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=250&fit=crop", f"Industry experts weigh in on the long-term impact of recent {clean_query} events on the broader market.", "https://www.bloomberg.com"),
+        _make_article(f"Top 5 Things You Need to Know About {clean_query}", "Daily Highlights", "6 hours ago", "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=400&h=250&fit=crop", f"A comprehensive breakdown of the most essential updates regarding {clean_query} this week.", "https://www.cnbc.com"),
+        _make_article(f"The Economic Impact of {clean_query}", "Market Watch", "8 hours ago", "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=250&fit=crop", f"Analyzing the financial and social repercussions of the latest shifts in {clean_query}.", "https://www.ft.com"),
+
         _make_article(f"Global Perspectives on {clean_query}", "World Times", "12 hours ago", "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=400&h=250&fit=crop", f"How different nations and leaders are responding to the growing importance of {clean_query}."),
     ]
 
@@ -307,7 +310,8 @@ def _get_dynamic_mock_summary(articles: list[dict], query: str) -> str:
 def summarize_with_gpt(articles: list[dict], role: str, query: str = "", domain: str = "all", language: str = "English") -> str:
     """Summarize articles using OpenAI GPT, tailored to role, domain, and language."""
     # Detect if articles are real (have URLs) or fallback placeholders
-    has_real_articles = any(a.get("url") for a in articles)
+    # Detect if we have any real articles (non-fallback ones)
+    has_real_articles = any(a.get("url") and not a.get("is_fallback") for a in articles)
 
     if not client:
         if has_real_articles:
@@ -344,7 +348,7 @@ def summarize_with_gpt(articles: list[dict], role: str, query: str = "", domain:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            max_tokens=400,
+            max_tokens=600,
             temperature=0.7,
         )
         summary = response.choices[0].message.content.strip()

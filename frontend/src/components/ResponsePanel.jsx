@@ -50,9 +50,9 @@ export default function ResponsePanel({ data, isSpeaking, onSpeakToggle, onSave,
   };
 
   const handleCardClick = (e, index, url) => {
-    e.preventDefault();
+    // Card expansion is independent of the link click
     if (expandedCard === index) {
-      window.open(url, '_blank', 'noopener,noreferrer');
+      setExpandedCard(null);
     } else {
       setExpandedCard(index);
     }
@@ -235,10 +235,8 @@ export default function ResponsePanel({ data, isSpeaking, onSpeakToggle, onSave,
                       className="sources-list__link"
                       onClick={(e) => {
                         e.preventDefault();
-                        if (expandedSource === i && src.url && src.url !== '#') {
+                        if (src.url && src.url !== '#') {
                           window.open(src.url, '_blank', 'noopener,noreferrer');
-                        } else {
-                          setExpandedSource(i);
                         }
                       }}
                       style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
@@ -299,13 +297,14 @@ export default function ResponsePanel({ data, isSpeaking, onSpeakToggle, onSave,
                   {expandedCard === i && (
                     <div className="news-card__expanded">
                       {article.description && <p className="news-card__description">{article.description}</p>}
-                      <a href={article.url || '#'} target="_blank" rel="noopener noreferrer"
-                        className="news-card__read-more" onClick={(e) => {
-                          e.stopPropagation();
-                          if (!article.url || article.url === '#') e.preventDefault();
-                        }}>
-                        Read full article on {article.source} →
-                      </a>
+                      {article.url && article.url !== '#' && (
+                        <a href={article.url} target="_blank" rel="noopener noreferrer"
+                          className="news-card__read-more" onClick={(e) => {
+                            e.stopPropagation();
+                          }}>
+                          Read full article on {article.source} →
+                        </a>
+                      )}
                     </div>
                   )}
                   {expandedCard !== i && article.timeAgo && (
