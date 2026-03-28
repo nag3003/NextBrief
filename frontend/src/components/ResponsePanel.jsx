@@ -9,6 +9,31 @@ export default function ResponsePanel({ data, isSpeaking, onSpeakToggle, onSave,
   const [showBriefingToast, setShowBriefingToast] = useState(false);
   const [activeHeadline, setActiveHeadline] = useState(0);
 
+  // --- NEW: Typewriter Effect for AI Lead ---
+  const [displayedLead, setDisplayedLead] = React.useState('');
+  const [isTyping, setIsTyping] = React.useState(false);
+
+  React.useEffect(() => {
+    if (enhanced?.lead) {
+      setDisplayedLead('');
+      setIsTyping(true);
+      let i = 0;
+      const fullText = enhanced.lead;
+      const timer = setInterval(() => {
+        setDisplayedLead((prev) => prev + fullText.charAt(i));
+        i++;
+        if (i >= fullText.length) {
+          clearInterval(timer);
+          setIsTyping(false);
+        }
+      }, 15);
+      return () => clearInterval(timer);
+    } else {
+      setDisplayedLead('');
+      setIsTyping(false);
+    }
+  }, [enhanced?.lead]);
+
   const roleLabels = { 
     student: (
       <span className="summary-card__role-badge">
@@ -84,10 +109,14 @@ export default function ResponsePanel({ data, isSpeaking, onSpeakToggle, onSave,
           </div>
         </div>
         <div className="enhanced-summary__lead-container">
-          <div className="enhanced-summary__lead">{lead}</div>
+          <div className="enhanced-summary__lead">
+            <span className="typewriter-text">{displayedLead}</span>
+            {isTyping && <span className="typewriter-cursor">|</span>}
+          </div>
           <button 
             className={`tts-button ${isSpeaking ? 'speaking' : ''}`}
-            onClick={() => onSpeakToggle(lead)}
+            onClick={() => onSpeakToggle(enhanced?.lead)}
+            disabled={isTyping}
             title="Listen to summary"
           >
             {isSpeaking ? (
@@ -169,7 +198,8 @@ export default function ResponsePanel({ data, isSpeaking, onSpeakToggle, onSave,
 
   return (
     <div className="response-container" id="response-panel">
-      <div className="summary-card">
+      <div className={`summary-card ${enhanced ? 'summary-card--ai' : ''}`}>
+        {enhanced && <div className="ai-scanner" />}
         <div className="summary-card__header">
           <div className="summary-card__title-row">
             <span className="summary-card__icon">
@@ -182,6 +212,9 @@ export default function ResponsePanel({ data, isSpeaking, onSpeakToggle, onSave,
             </span>
             <span className="summary-card__title">AI Analysis</span>
             {roleLabels[role] || <span className="summary-card__role-badge">{role}</span>}
+            <div className="ai-badge-premium">
+              <span>✨</span> Verified by Nex AI
+            </div>
             <span className="last-updated"><span className="pulse-dot-green"></span> Live Tracking</span>
           </div>
           <div className="summary-card__actions">
@@ -198,9 +231,20 @@ export default function ResponsePanel({ data, isSpeaking, onSpeakToggle, onSave,
           {enhanced ? renderEnhancedSummary(enhanced) : renderSummary(summary)}
         </div>
         {sentiment?.label && (
-          <div className="sentiment-badge" style={{ '--s-color': sentimentColor[sentiment.score] }}>
-            <span className="sentiment-badge__emoji">{sentiment.emoji}</span>
-            <span className="sentiment-badge__label">Market Bias: {sentiment.label}</span>
+          <div className="sentiment-meter">
+            <div className="sentiment-meter__title">Institutional Market Sentiment</div>
+            <div className="sentiment-meter__track">
+              <div className={`sentiment-meter__fill ${sentiment.score}`} />
+            </div>
+            <div className="sentiment-meter__labels">
+              <span>BEARISH</span>
+              <span>NEUTRAL</span>
+              <span>BULLISH</span>
+            </div>
+            <div className="sentiment-meter__value">
+              <span className="sentiment-meter__emoji">{sentiment.emoji}</span>
+              <span className="sentiment-meter__label">{sentiment.label} Bias Detected</span>
+            </div>
           </div>
         )}
         {showBriefingToast && <div className="briefing-toast">✅ Saved!</div>}

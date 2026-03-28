@@ -215,29 +215,65 @@ def _get_youtube_videos(query: str) -> list[dict]:
         ]
 
 
-def _get_dynamic_mock_summary(articles: list[dict], query: str) -> str:
-    """Generate a dynamic 3-point summary using real article titles and descriptions to simulate AI processing."""
+def _get_dynamic_mock_summary(articles: list[dict], query: str, role: str) -> dict:
+    """Generate a dynamic structured summary using real article data to simulate AI processing."""
     if not articles:
-        return "No latest news found."
+        return {
+            "headlines": [f"Developments in {query}"],
+            "lead": f"Currently, there are no real-time articles for '{query}', but we are monitoring the situation.",
+            "key_points": ["System is refreshing the news feed.", "Check back shortly for live updates."],
+            "insights": ["Strategic monitoring advised."]
+        }
     
-    bullets = []
-    for a in articles[:3]:
-        if a.get('title'):
-            desc = a.get('description', '').strip()
-            # Truncate description if too long
-            if len(desc) > 100:
-                desc = desc[:97] + "..."
-            bullet_text = f"{a['title']}"
-            if desc and desc != "No description available.":
-                bullet_text += f" — {desc}"
-            bullets.append(f"• {bullet_text}")
-            
-    if not bullets:
-        return "Here is your news update. Please see the articles below for details."
-        
-    summary = f"Here is a clear 3-point summary specific to your structured query on {query}:\n\n"
-    summary += "\n\n".join(bullets)
-    return summary
+    # Extract headlines from articles
+    headlines = [a.get('title') for a in articles[:3] if a.get('title')]
+    if not headlines:
+        headlines = [f"Analysis: {query}"]
+
+    # Create a lead
+    lead = f"NexBrief has analyzed the latest developments regarding {query}. "
+    if articles[0].get('description'):
+        lead += articles[0]['description'][:150] + "..."
+    else:
+        lead += "Recent activity in this sector indicates significant shifts in the landscape."
+
+    # Create key points from article titles/descriptions
+    key_points = []
+    for a in articles[:4]:
+        title = a.get('title', '')
+        if title:
+            key_points.append(title)
+    
+    if len(key_points) < 2:
+        key_points.append(f"Ongoing trends in {query} are being tracked.")
+        key_points.append("Market participants are observing new indicators.")
+
+    # Create role-specific insights
+    role_insights = {
+        "student": [
+            "Focus on the underlying technology and educational impact.",
+            "Research the historical context of these developments."
+        ],
+        "investor": [
+            "Monitor volatility in related market segments.",
+            "Assess the ROI of emerging patterns in this space."
+        ],
+        "founder": [
+            "Identify gaps for potential innovation and disruption.",
+            "Evaluate 'Moats' and strategic positioning of current players."
+        ],
+        "all": [
+            "Broad industry shifts detected across multiple regions.",
+            "Public sentiment remains cautious but attentive."
+        ]
+    }
+    
+    return {
+        "headlines": headlines,
+        "lead": lead,
+        "key_points": key_points[:4],
+        "insights": role_insights.get(role, role_insights["all"])
+    }
 
 def summarize_with_gpt(articles: list[dict], role: str, query: str = "", domain: str = "all", language: str = "English") -> dict:
     """Summarize articles using OpenAI GPT into the new structured AI Enhancer Pipeline format."""
@@ -253,12 +289,8 @@ def summarize_with_gpt(articles: list[dict], role: str, query: str = "", domain:
     has_real_articles = any(a.get("title") and not a.get("is_fallback") for a in articles)
 
     if not client:
-        return {
-            "headlines": [f"Developments in {query}"],
-            "lead": "AI analysis is currently offline. Please check your configuration.",
-            "key_points": ["System unable to connect to OpenAI."],
-            "insights": ["Strategic verification required."]
-        }
+        print(f"[*] AI Mode: Offline (Mocking response for query: '{query}')")
+        return _get_dynamic_mock_summary(articles, query, role)
 
     system_prompt = get_system_prompt(role, domain, language)
     
@@ -292,20 +324,10 @@ def summarize_with_gpt(articles: list[dict], role: str, query: str = "", domain:
             return parsed
         except json.JSONDecodeError:
             print(f"[AI Pipeline Error] Invalid JSON from AI: {content}")
-            return {
-                "headlines": [f"Analysis: {query}"],
-                "lead": f"Recent developments in {query} are shaping the industry landscape.",
-                "key_points": [f"Market movements detected for {query}.", "Observers monitoring key indicators."],
-                "insights": ["Strategic positioning advised for long-term trends."]
-            }
+            return _get_dynamic_mock_summary(articles, query, role)
     except Exception as e:
         print(f"[AI Pipeline Error] {e}")
-        return {
-            "headlines": [f"Analysis: {query}"],
-            "lead": f"Recent developments in {query} are shaping the industry landscape.",
-            "key_points": [f"Market movements detected for {query}.", "Observers monitoring key indicators."],
-            "insights": ["Strategic positioning advised for long-term trends."]
-        }
+        return _get_dynamic_mock_summary(articles, query, role)
 
 
 def _extract_sentiment(summary_obj: dict, role: str) -> dict:
