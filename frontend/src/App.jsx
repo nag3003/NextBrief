@@ -5,6 +5,8 @@ import TextFallback from './components/TextFallback';
 import ResponsePanel from './components/ResponsePanel';
 import { fetchNewsSummary, fetchLocation } from './utils/api';
 import { startListening, speakText, stopSpeaking } from './utils/speech';
+import { Toaster } from 'react-hot-toast';
+import { useBreakingNews } from './hooks/useBreakingNews';
 
 // Dynamic suggestions per role
 const ROLE_SUGGESTIONS = {
@@ -80,6 +82,7 @@ const I18N = {
     global: 'Global',
     weather: 'Weather',
     placeholder: 'Type your news query...',
+    locationLoading: 'Detecting location...',
   },
   Hindi: {
     roles: { all: 'सब', student: 'छात्र', investor: 'निवेशक', founder: 'संस्थापक' },
@@ -104,6 +107,7 @@ const I18N = {
     tryAs: 'इस रूप में पूछें',
     global: 'वैश्विक',
     weather: 'मौसम',
+    locationLoading: 'लोकेशन खोज रहे हैं...',
   },
   Tamil: {
     roles: { all: 'அனைத்தும்', student: 'மாணவர்', investor: 'முதலீட்டாளர்', founder: 'நிறுவனர்' },
@@ -128,6 +132,7 @@ const I18N = {
     tryAs: 'இவ்வாறு கேட்கவும்',
     global: 'உலகளாவிய',
     weather: 'வானிலை',
+    locationLoading: 'இருப்பிடத்தைக் கண்டறியும்...',
   },
   Telugu: {
     roles: { all: 'అన్నీ', student: 'విద్యార్థి', investor: 'పెట్టుబడిదారుడు', founder: 'వ్యవస్థాపకుడు' },
@@ -152,6 +157,7 @@ const I18N = {
     tryAs: 'ఇలా అడగండి',
     global: 'ప్రపంచ',
     weather: 'వాతావరణం',
+    locationLoading: 'స్థానాన్ని కనుగొంటోంది...',
   },
   Malayalam: {
     roles: { all: 'എല്ലാം', student: 'വിദ്യാർത്ഥി', investor: 'നിക്ഷേപകൻ', founder: 'സ്ഥാപകൻ' },
@@ -176,6 +182,7 @@ const I18N = {
     tryAs: 'ഇങ്ങനെ ചോദിക്കൂ',
     global: 'ആഗോളം',
     weather: 'കാലാവസ്ഥ',
+    locationLoading: 'ലൊക്കേഷൻ കണ്ടെത്തുന്നു...',
   },
   Kannada: {
     roles: { all: 'ಎಲ್ಲಾ', student: 'ವಿದ್ಯಾರ್ಥಿ', investor: 'ಹೂಡಿಕೆದಾರ', founder: 'ಸಂಸ್ಥಾಪಕ' },
@@ -196,10 +203,11 @@ const I18N = {
     placeholder: 'ನಿಮ್ಮ ಸುದ್ದಿ ಪ್ರಶ್ನೆಯನ್ನು ಟೈಪ್ ಮಾಡಿ...',
     locating: 'ಸ್ಥಳವನ್ನು ಕಂಡುಹಿಡಿಯುತ್ತಿದೆ...',
     modeActive: 'ಆಕ್ಟಿವ್ ಮೋಡ್',
-    yourQuery: 'ನಿಮ್ಮ ಪ್ರಶ್ನೆ',
+    yourQuery: 'ನಿಮ್ಮ ప్రశ్న',
     tryAs: 'ಹೀಗೆ ಕೇಳಿ',
     global: 'ಜಾಗತಿಕ',
     weather: 'ಹವಾಮಾನ',
+    locationLoading: 'ಸ್ಥಳವನ್ನು ಕಂಡುಹಿಡಿಯುತ್ತಿದೆ...',
   },
   Bengali: {
     roles: { all: 'সকল', student: 'শিক্ষার্থী', investor: 'বিনিয়োগকারী', founder: 'প্রতিষ্ঠাতা' },
@@ -224,6 +232,7 @@ const I18N = {
     tryAs: 'এভাবে জিজ্ঞাসা করুন',
     global: 'বৈশ্বিক',
     weather: 'আবহাওয়া',
+    locationLoading: 'অবস্থান খুঁজছি...',
   },
   Marathi: {
     roles: { all: 'सर्व', student: 'विद्यार्थी', investor: 'गुंतवणूकदार', founder: 'संस्थापक' },
@@ -236,11 +245,11 @@ const I18N = {
       technology: 'तंत्रज्ञान',
       entertainment: 'मनोरंजन',
       sports: 'खेळ',
-      science: 'विज्ञान',
+      science: 'বিজ্ঞান',
       health: 'आरोग्य'
     },
     mic: { initial: 'विचारण्यासाठी टॅप करा', listening: 'ऐकत आहे...', processing: 'प्रक्रिया सुरू...' },
-    btn: { ask: 'AI ला विचारा', briefing: 'ब्रीफिंग' },
+    btn: { ask: 'AI ला विचारा', briefing: 'ಬ್ರೀಫಿಂಗ್' },
     placeholder: 'तुमचा बातम्यांचा प्रश्न टाइप करा...',
     locating: 'स्थान शोधत आहे...',
     modeActive: 'सक्रिय मोड',
@@ -248,6 +257,7 @@ const I18N = {
     tryAs: 'असे विचारा',
     global: 'जागतिक',
     weather: 'हवामान',
+    locationLoading: 'स्थान शोधत आहे...',
   },
   Gujarati: {
     roles: { all: 'બધા', student: 'વિદ્યાર્થી', investor: 'રોકાણકાર', founder: 'સ્થાપક' },
@@ -272,6 +282,7 @@ const I18N = {
     tryAs: 'આ રીતે પૂછો',
     global: 'વૈશ્વિક',
     weather: 'હવામાન',
+    locationLoading: 'સ્થાન શોધી રહ્યું છે...',
   },
   Odia: {
     roles: { all: 'ସବୁ', student: 'ଛାତ୍ର', investor: 'ନିବେଶକ', founder: 'ପ୍ରତିଷ୍ଠାତା' },
@@ -282,7 +293,7 @@ const I18N = {
       local: 'ସ୍ଥାନୀୟ',
       business: 'ବ୍ୟବସାୟ',
       technology: 'ପ୍ରଯୁକ୍ତି',
-      entertainment: 'ମନୋରଞ୍ଜନ',
+      entertainment: 'ମନୋରଞ୍જન',
       sports: 'କ୍ରୀଡ଼ା',
       science: 'ବିଜ୍ଞାନ',
       health: 'ସ୍ୱାସ୍ଥ୍ୟ'
@@ -295,7 +306,8 @@ const I18N = {
     yourQuery: 'ଆପଣଙ୍କ ପ୍ରଶ୍ନ',
     tryAs: 'ଏପରି ପଚାରନ୍ତୁ',
     global: 'ବୈଶ୍ୱିକ',
-    weather: 'ପାଣିପାଗ',
+    weather: 'ପାଣିପାగ',
+    locationLoading: 'ସ୍ଥାନ ଖୋଜୁଛି...',
   },
   Urdu: {
     roles: { all: 'سب', student: 'طالب علم', investor: 'سرمایہ کار', founder: 'بانی' },
@@ -311,15 +323,16 @@ const I18N = {
       science: 'سائنس',
       health: 'صحت'
     },
-    mic: { initial: 'پوچھنے کے لیے ٹیپ کریں', listening: 'سن رہا ہوں...', processing: 'عمل جاری ہے...' },
+    mic: { initial: 'پوچھنے کے لیے ٹیప్ کریں', listening: 'سن رہا ہوں...', processing: 'عمل جاری ہے...' },
     btn: { ask: 'AI سے پوچھیں', briefing: 'بریفنگ' },
-    placeholder: 'اپنا خبروں کا سوال ٹائپ کریں...',
+    placeholder: 'اپنا خبروں کا سوال ٹائప్ کریں...',
     locating: 'مقام تلاش کر رہا ہے...',
     modeActive: 'فعال موڈ',
     yourQuery: 'آپ کا سوال',
     tryAs: 'اس طرح پوچھیں',
     global: 'عالمی',
     weather: 'موسم',
+    locationLoading: 'مقام تلاش کر رہا ہے...',
   }
 };
 
@@ -344,6 +357,7 @@ const DOMAINS = [
 ];
 
 export default function App() {
+  // --- Phase 2: Real-Time Breaking News ---
   const [role, setRole] = useState('all');
   const [query, setQuery] = useState('');
   const [response, setResponse] = useState(null);
@@ -375,6 +389,9 @@ export default function App() {
     try { localStorage.setItem('newsai-location', loc); } catch {}
   }, []);
 
+  // --- Phase 2: Real-Time Breaking News ---
+  useBreakingNews(selectedLanguage, speakText);
+
   // --- Fetch Weather ---
   const fetchWeather = useCallback(async (loc) => {
     try {
@@ -383,6 +400,7 @@ export default function App() {
         // Use IP-based location for weather when geolocation is denied
         try {
           const ipRes = await fetch('https://ipapi.co/json/');
+          if (!ipRes.ok) throw new Error('IP API failed');
           const ipData = await ipRes.json();
           city = ipData.city || 'Hyderabad';
           if (ipData.city) {
@@ -396,17 +414,20 @@ export default function App() {
         city = loc.split(',')[0].trim();
       }
       const res = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`);
+      if (!res.ok) throw new Error('Weather API failed');
       const data = await res.json();
-      const current = data.current_condition[0];
-      setWeather({
-        temp: current.temp_C,
-        desc: current.weatherDesc[0].value,
-        city: city,
-      });
+      if (data && data.current_condition && data.current_condition[0]) {
+        const current = data.current_condition[0];
+        setWeather({
+          temp: current.temp_C,
+          desc: current.weatherDesc?.[0]?.value || 'Unknown',
+          city: city,
+        });
+      }
     } catch (e) {
       console.warn('[Weather Error]', e);
     }
-  }, []);
+  }, [updateLocation]);
 
   // --- Fetch news from backend ---
   // overrideDomain lets category clicks pass the NEW domain immediately
@@ -440,17 +461,29 @@ export default function App() {
     try {
       const data = await fetchNewsSummary(finalQ, role, activeDomain, selectedLanguage, activeLoc);
       setResponse(data);
-      if (data.summary) {
+      // Auto-speak the 'lead' if available (Professional briefing experience)
+      if (data?.enhanced?.lead) {
         setSpeaking(true);
-        speakText(data.summary, () => setSpeaking(false), selectedLanguage);
+        speakText(data.enhanced.lead, () => setSpeaking(false), selectedLanguage);
       }
     } catch (err) {
       console.error('[Fetch Error]', err);
-      setError('Could not reach the AI backend. Make sure Flask is running on port 5001.');
+      setError('Could not reach the AI backend. Please verify your connection or API configuration.');
     } finally {
       setLoading(false);
     }
   }, [role, location, domain, selectedLanguage]);
+
+  // --- Resolve location via IP as fallback ---
+  const resolveLocationViaIP = useCallback(async () => {
+    try {
+      const data = await fetchLocation();
+      if (data.city) {
+        return [data.city, data.region, data.country_name].filter(Boolean).join(', ');
+      }
+    } catch { /* silent */ }
+    return 'India';
+  }, []);
 
   // --- Fix 1: Get REAL USER LOCATION ---
   const getUserLocation = useCallback(async () => {
@@ -482,17 +515,6 @@ export default function App() {
       );
     });
   }, [resolveLocationViaIP]);
-
-  // --- Resolve location via IP as fallback ---
-  const resolveLocationViaIP = useCallback(async () => {
-    try {
-      const data = await fetchLocation();
-      if (data.city) {
-        return [data.city, data.region, data.country_name].filter(Boolean).join(', ');
-      }
-    } catch { /* silent */ }
-    return 'India';
-  }, []);
 
   // --- Refresh location on demand ---
   const refreshLocation = useCallback(async () => {
@@ -608,7 +630,11 @@ export default function App() {
         }
       });
     }
-  }, [handleQuery, fetchWeather, query, updateLocation, resolveLocationViaIP]);
+  }, [handleQuery, fetchWeather, updateLocation, resolveLocationViaIP, query, getUserLocation, location]);
+
+
+  console.log('[DEBUG] App rendering', { role, location, domain, query, loading });
+
 
   // --- Mic toggle ---
   const handleMicToggle = useCallback(() => {
@@ -633,7 +659,13 @@ export default function App() {
   // --- TTS toggle ---
   const handleSpeakToggle = useCallback(() => {
     if (speaking) { stopSpeaking(); setSpeaking(false); }
-    else if (response?.summary) { setSpeaking(true); speakText(response.summary, () => setSpeaking(false), selectedLanguage); }
+    else {
+      const textToSpeak = response?.enhanced?.lead || response?.summary;
+      if (textToSpeak) {
+        setSpeaking(true); 
+        speakText(textToSpeak, () => setSpeaking(false), selectedLanguage); 
+      }
+    }
   }, [speaking, response, selectedLanguage]);
 
   // --- Save to Briefing ---
@@ -647,7 +679,7 @@ export default function App() {
   }, [savedItems]);
 
   // Build location-aware suggestions
-  const city = location.split(',')[0].trim();
+  const city = location && typeof location === 'string' ? location.split(',')[0].trim() : '';
   const baseSuggestions = ROLE_SUGGESTIONS[role] || ROLE_SUGGESTIONS.all;
   const locationSuggestions = (city && city !== 'Global') ? [
     { icon: '📍', text: `Latest news in ${city}` },
@@ -694,12 +726,12 @@ export default function App() {
               <rect x="3" y="4" width="18" height="11" rx="2" />
               <path d="M7 19h10M12 15v4" />
             </svg>
-            {I18N[selectedLanguage].btn.briefing}
-            {savedItems.length > 0 && <span className="briefing-count">{savedItems.length}</span>}
+            {I18N[selectedLanguage]?.btn?.briefing || 'Briefings'}
+            {savedItems?.length > 0 && <span className="briefing-count">{savedItems.length}</span>}
           </button>
 
           <div className="language-selector">
-            {LANGUAGE_OPTIONS.map((lang) => (
+            {LANGUAGE_OPTIONS && Array.isArray(LANGUAGE_OPTIONS) && LANGUAGE_OPTIONS.map((lang) => (
               <button key={lang.id} className={`lang-btn ${selectedLanguage === lang.id ? 'active' : ''}`} onClick={() => setSelectedLanguage(lang.id)}>
                 {lang.text}
               </button>
@@ -712,10 +744,10 @@ export default function App() {
         <div className="glass-filter-block">
           {/* Role Selector */}
           <div className="role-pill-container">
-            {ROLES.map((r) => (
+            {ROLES && Array.isArray(ROLES) && ROLES.map((r) => (
               <button key={r.id} className={`role-btn ${role === r.id ? 'active' : ''}`} onClick={() => { setRole(r.id); setResponse(null); }}>
                 <span className="role-icon">{r.icon}</span>
-                <span className="role-label">{I18N[selectedLanguage].roles[r.id]}</span>
+                <span className="role-label">{I18N[selectedLanguage]?.roles?.[r.id] || r.id}</span>
               </button>
             ))}
           </div>
@@ -725,23 +757,27 @@ export default function App() {
           {/* Category Nav (Google News Style) */}
           <nav className="category-nav">
             <div className="category-scroll">
-              {DOMAINS.map((d) => (
+              {DOMAINS && Array.isArray(DOMAINS) && DOMAINS.map((d) => (
                 <button key={d.id} className={`category-link ${domain === d.id ? 'active' : ''}`} onClick={() => { setDomain(d.id); handleQuery('', location, d.id); }}>
-                  {I18N[selectedLanguage].domains[d.id]}
+                  {I18N[selectedLanguage]?.domains?.[d.id] || d.id}
                 </button>
               ))}
             </div>
           </nav>
         </div>
 
-        <MicButton isListening={listening} isLoading={loading} onToggle={handleMicToggle}
-          label={loading ? I18N[selectedLanguage].mic.processing : (listening ? I18N[selectedLanguage].mic.listening : I18N[selectedLanguage].mic.initial)} />
+        <MicButton 
+          isListening={listening} 
+          isLoading={loading} 
+          onToggle={handleMicToggle}
+          label={loading ? (I18N[selectedLanguage]?.mic?.processing || 'Processing...') : (listening ? (I18N[selectedLanguage]?.mic?.listening || 'Listening...') : (I18N[selectedLanguage]?.mic?.initial || 'Tap to ask'))} 
+        />
 
         <div className="query-input-section">
           <div className="query-box">
-            <input type="text" className="query-input" placeholder={I18N[selectedLanguage].placeholder} value={query} onChange={(e) => setQuery(e.target.value)}
+            <input type="text" className="query-input" placeholder={I18N[selectedLanguage]?.placeholder || 'Type your query...'} value={query} onChange={(e) => setQuery(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleQuery()} />
-            <button className="ask-btn" onClick={() => handleQuery()} disabled={loading}>{I18N[selectedLanguage].btn.ask}</button>
+            <button className="ask-btn" onClick={() => handleQuery()} disabled={loading}>{I18N[selectedLanguage]?.btn?.ask || 'Ask AI'}</button>
           </div>
         </div>
 
@@ -756,75 +792,78 @@ export default function App() {
                 <circle cx="12" cy="10" r="3" />
               </svg>
             )}
-            <span>{locationLoading ? 'Detecting location...' : (location || 'Detecting location...')}</span>
+            <span>{locationLoading ? (I18N[selectedLanguage]?.locating || 'Locating...') : (location || 'Detecting location...')}</span>
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ opacity: 0.5 }}>
               <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
             </svg>
           </div>
           {domain !== 'all' && (
-            <div className="status-strip__domain">
-              {I18N[selectedLanguage].domains[domain]}
-            </div>
-          )}
-          {selectedLanguage !== 'English' && (
             <div className="status-strip__item">
-              <span>🌐</span>
-              <span>{selectedLanguage}</span>
+              <span className="pulse-dot-indigo"></span>
+              <span>{I18N[selectedLanguage]?.domains?.[domain] || domain} {I18N[selectedLanguage]?.modeActive || 'MODE ACTIVE'}</span>
             </div>
           )}
         </div>
 
-        {error && <div className="alert-error"><span>⚠️</span> {error}</div>}
+        {error && <div className="error-message">{error}</div>}
 
-        {query && !loading && (
-          <div className="query-display">
-            <div className="query-display__label">{I18N[selectedLanguage].yourQuery}</div>
-            <div className="query-display__text">"{query}"</div>
-          </div>
-        )}
-
-        <ResponsePanel data={response} isSpeaking={speaking} onSpeakToggle={handleSpeakToggle} onSave={handleSave} savedItems={savedItems} />
-
+        <ResponsePanel 
+          data={response} 
+          isSpeaking={speaking} 
+          onSpeakToggle={handleSpeakToggle}
+          onSave={handleSave}
+          savedItems={savedItems}
+        />
+        
+        {/* Suggested Queries */}
         {!response && !loading && (
-          <div className="preload-section">
-            <div className="preload-section__label">{I18N[selectedLanguage].tryAs} {I18N[selectedLanguage].roles[role]}</div>
-            <div className="preload-grid">
-              {suggestions.map((s, i) => (
-                <button key={i} className="preload-btn" onClick={() => handleQuery(s.text)}>
-                  <span className="preload-btn__icon">{s.icon}</span>
-                  {s.text}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {showSaved && (
-          <div className="modal-overlay" onClick={() => setShowSaved(false)}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>Saved Briefings</h2>
-                <button className="modal-close" onClick={() => setShowSaved(false)}>×</button>
-              </div>
-              <div className="modal-body">
-                {savedItems.length === 0 ? <p>No saved news yet.</p> : (
-                  <div className="saved-list">
-                    {savedItems.map((item, i) => (
-                      <div key={i} className="saved-item" onClick={() => { setShowSaved(false); handleQuery(item.query); }}>
-                        <div className="saved-item__header">
-                          <span className="saved-item__query">"{item.query}"</span>
-                          <button onClick={(e) => { e.stopPropagation(); handleSave(item); }}>🗑️</button>
-                        </div>
-                        <p className="saved-item__summary">{item.summary}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+          <div className="suggested-queries">
+             <div className="suggestions-grid">
+               {suggestions.map((s, i) => (
+                 <button key={i} className="suggestion-pill" onClick={() => handleQuery(s.text)}>
+                   <span className="suggestion-pill__icon">{s.icon}</span>
+                   {s.text}
+                 </button>
+               ))}
+             </div>
           </div>
         )}
       </main>
+
+      {/* Briefings Drawer */}
+      {showSaved && (
+        <div className="briefings-drawer-overlay" onClick={() => setShowSaved(false)}>
+          <div className="briefings-drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="drawer-header">
+              <h2>Saved Briefings</h2>
+              <button className="close-drawer" onClick={() => setShowSaved(false)}>✕</button>
+            </div>
+            <div className="drawer-content">
+              {savedItems.length === 0 ? (
+                <div className="empty-briefings">
+                  <div className="empty-icon">📁</div>
+                  <p>Your saved news intelligence will appear here.</p>
+                </div>
+              ) : (
+                <div className="saved-list">
+                  {savedItems.map((item, i) => (
+                    <div key={i} className="saved-item" onClick={() => { handleQuery(item.query); setShowSaved(false); }}>
+                      <div className="saved-item__meta">
+                        <span className="saved-item__role">{item.role}</span>
+                        <span className="saved-item__time">{item.savedAt}</span>
+                      </div>
+                      <div className="saved-item__query">{item.query}</div>
+                      <div className="saved-item__preview">{item.summary?.substring(0, 100)}...</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Toaster position="bottom-center" />
     </>
   );
 }

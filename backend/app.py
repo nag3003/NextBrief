@@ -33,47 +33,29 @@ else:
     client = None
 
 def get_system_prompt(role: str, domain: str, language: str) -> str:
-    """Generate a dynamic system prompt based on role, domain, and target language."""
+    """Generate a dynamic system prompt for the AI News Enhancer Pipeline."""
     base = (
-        "You are the core intelligence of 'NexBrief,' a high-performance news assistant. "
+        "You are a professional newsroom editor for 'NexBrief.' "
         f"Target Language: {language}. "
-        "Core directives: (1) Neutrality. (2) Brevity (under 100 words). (3) Timeliness. "
+        "Your goal is to transform raw news articles into high-impact, structured insights. "
     )
     
     role_overlays = {
-        "student": "PERSONA: Academic guide. Focus: Learning and global context. Tone: Clear. ",
-        "investor": "PERSONA: Financial analyst. Focus: Market movement and ROI. Tone: Data-driven. ",
-        "founder": "PERSONA: Strategic advisor. Focus: Innovation and competition. Tone: High-energy. ",
+        "student": "PERSONA: Academic guide. Focus on learning and context. ",
+        "investor": "PERSONA: Financial analyst. Focus on market movement and ROI. ",
+        "founder": "PERSONA: Strategic advisor. Focus on innovation and Moats. ",
     }
-    
-    domain_overlays = {
-        "stocks": "CONTEXT: You are in 'Stocks Mode'. Focus on tickers, NIFTY/S&P, and fiscal impact. ",
-        "ai": "CONTEXT: AI Research mode. Focus on models, chips, and AGI progress. ",
-        "energy": "CONTEXT: Energy sector mode. Focus on renewables, oil, and grid infra. ",
-        "health": "CONTEXT: Healthcare mode. Focus on biotech, FDA, and longevity. ",
-        "startup": "CONTEXT: Startup mode. Focus on funding rounds, pivots, and VC trends. ",
-        "india": "CONTEXT: Regional India mode. Focus on national news, policy, and subcontinental trends. ",
-        "world": "CONTEXT: International mode. Focus on global diplomacy, major events, and cross-border impact. ",
-        "local": "CONTEXT: Hyper-local mode. Focus on community, regional governance, and local sentiment. ",
-        "business": "CONTEXT: Business & Finance mode. Focus on earnings, markets, and corporate strategy. ",
-        "technology": "CONTEXT: Tech & Innovation mode. Focus on gadgets, software, and digital transformation. ",
-        "entertainment": "CONTEXT: Entertainment mode. Focus on cinema, arts, and celebrity news. ",
-        "sports": "CONTEXT: Sports mode. Focus on matches, tournaments, and athlete performance. ",
-        "science": "CONTEXT: Science mode. Focus on space, physics, and major discoveries. ",
-        "all": "CONTEXT: General multi-domain news. ",
-    }
-
-    persona = role_overlays.get(role, role_overlays["student"])
-    context = domain_overlays.get(domain, domain_overlays["all"])
     
     instruction = (
-        f"TASK: Summarize the provided news into EXACTLY 3 bullet points in {language}. "
-        "Structure each bullet as: '• **[Topic]:** [Insight]'. "
-        f"Then, add a short section titled 'INSIGHT:' in {language} explaining the strategic significance for a {role}. "
-        f"Final response MUST be entirely in {language} (except the keyword 'INSIGHT:')."
-    )
+        "TASK: Analyze the provided articles and return a JSON object with EXACTLY these keys:\n"
+        "1. 'headlines': An array of 3 catchy, high-impact headline versions for the news.\n"
+        "2. 'lead': A strong 1-2 sentence opening paragraph (the skip-ahead summary).\n"
+        "3. 'key_points': An array of 3-5 essential facts or developments.\n"
+        "4. 'insights': An array of 2-3 strategic takeaways specifically for a {role}.\n\n"
+        f"IMPORTANT: All values MUST be in {language}. Return ONLY the JSON object."
+    ).format(role=role)
     
-    return base + persona + context + instruction
+    return base + role_overlays.get(role, role_overlays["student"]) + instruction
 
 # --- Hardcoded fallbacks: topic × role matrix for demo safety ---
 def _get_fallback(query: str, role: str) -> str:
@@ -257,38 +239,35 @@ def _get_dynamic_mock_summary(articles: list[dict], query: str) -> str:
     summary += "\n\n".join(bullets)
     return summary
 
-def summarize_with_gpt(articles: list[dict], role: str, query: str = "", domain: str = "all", language: str = "English") -> str:
-    """Summarize articles using OpenAI GPT, tailored to role, domain, and language."""
-    # Detect if articles are real (have URLs) or fallback placeholders
-    # Detect if we have any real articles (non-fallback ones)
-    has_real_articles = any(a.get("url") and not a.get("is_fallback") for a in articles)
+def summarize_with_gpt(articles: list[dict], role: str, query: str = "", domain: str = "all", language: str = "English") -> dict:
+    """Summarize articles using OpenAI GPT into the new structured AI Enhancer Pipeline format."""
+    # Clean & Normalize Data
+    clean_articles = [
+        {
+            "title": a.get("title", ""),
+            "description": a.get("description", ""),
+            "source": a.get("source", ""),
+        } for a in articles
+    ]
+
+    has_real_articles = any(a.get("title") and not a.get("is_fallback") for a in articles)
 
     if not client:
-        if has_real_articles:
-            return _get_dynamic_mock_summary(articles, query)
-        return _get_fallback(query, role)
+        return {
+            "headlines": [f"Developments in {query}"],
+            "lead": "AI analysis is currently offline. Please check your configuration.",
+            "key_points": ["System unable to connect to OpenAI."],
+            "insights": ["Strategic verification required."]
+        }
 
     system_prompt = get_system_prompt(role, domain, language)
-
+    
     if has_real_articles:
-        # Real articles from NewsAPI — summarize them
-        article_text = "\n\n".join(
-            f"{a['title']} ({a['source']})\n{a['description'] or 'No description available.'}"
-            for a in articles
-        )
-        user_prompt = (
-            f"The user asked about: '{query}'.\n\n"
-            f"Here are the latest real-time news articles. Summarize the key points:\n\n{article_text}"
-        )
+        user_prompt = f"Articles to summarize:\n{clean_articles}\n\nClient Query: {query}"
     else:
-        # No real articles — use GPT's own knowledge to answer the specific query
         user_prompt = (
-            f"The user asked about: '{query}'.\n\n"
-            "No real-time articles were found for this query. "
-            f"Using your own knowledge, provide a highly relevant, specific, and insightful analysis about '{query}' "
-            f"tailored for a {role}. "
-            "Do NOT give a generic overview — focus specifically on what the user asked. "
-            f"Be concrete with facts, names, numbers, and recent developments you know about regarding '{query}'."
+            f"No specific news articles found for: '{query}'. "
+            f"Using your professional knowledge, provide a structured 'NexBrief' report for a {role} regarding this topic."
         )
 
     try:
@@ -298,36 +277,55 @@ def summarize_with_gpt(articles: list[dict], role: str, query: str = "", domain:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            max_tokens=600,
-            temperature=0.7,
+            max_tokens=1000,
+            temperature=0.3,
+            response_format={"type": "json_object"}
         )
-        summary = response.choices[0].message.content.strip()
-        # Clean up some common AI artifacts but KEEP the bullet points and bolding for the UI parser
-        summary = re.sub(r'\[([^\]]+)\]\([^\)]+\)', r'\1', summary)
-        return summary
+        import json
+        content = response.choices[0].message.content.strip()
+        try:
+            parsed = json.loads(content)
+            # Ensure all keys exist
+            for key in ["headlines", "lead", "key_points", "insights"]:
+                if key not in parsed:
+                    parsed[key] = [] if key != "lead" else ""
+            return parsed
+        except json.JSONDecodeError:
+            print(f"[AI Pipeline Error] Invalid JSON from AI: {content}")
+            return {
+                "headlines": [f"Analysis: {query}"],
+                "lead": f"Recent developments in {query} are shaping the industry landscape.",
+                "key_points": [f"Market movements detected for {query}.", "Observers monitoring key indicators."],
+                "insights": ["Strategic positioning advised for long-term trends."]
+            }
     except Exception as e:
-        print(f"[OpenAI Error] {e}")
-        return _get_fallback(query, role)
+        print(f"[AI Pipeline Error] {e}")
+        return {
+            "headlines": [f"Analysis: {query}"],
+            "lead": f"Recent developments in {query} are shaping the industry landscape.",
+            "key_points": [f"Market movements detected for {query}.", "Observers monitoring key indicators."],
+            "insights": ["Strategic positioning advised for long-term trends."]
+        }
 
 
-def _extract_sentiment(summary: str, role: str) -> dict:
-    """Extract sentiment from GPT summary text."""
+def _extract_sentiment(summary_obj: dict, role: str) -> dict:
+    """Extract sentiment from the structured lead in the GPT summary object."""
     if role != "investor":
         return {"label": None, "score": None}
-    s = summary.lower()
-    if "bullish" in s:
+    
+    lead = summary_obj.get("lead", "").lower()
+    if any(w in lead for w in ["bullish", "growth", "high", "upside", "positive"]):
         return {"label": "Bullish", "score": "positive", "emoji": "📈"}
-    elif "bearish" in s:
+    elif any(w in lead for w in ["bearish", "risk", "down", "negative", "loss"]):
         return {"label": "Bearish", "score": "negative", "emoji": "📉"}
-    elif "neutral" in s:
-        return {"label": "Neutral", "score": "neutral", "emoji": "⚖️"}
-    return {"label": None, "score": None}
+    return {"label": "Neutral", "score": "neutral", "emoji": "⚖️"}
 
 
 # ========================
 # API ROUTES
 # ========================
 
+@app.route("/api/index/get-news", methods=["POST"])
 @app.route("/api/get-news", methods=["POST"])
 @app.route("/get-news", methods=["POST"])
 def get_news():
@@ -368,11 +366,11 @@ def get_news():
     if not articles:
         articles = _get_fallback_articles(query)
 
-    # 2. Summarize with GPT (v4 multi-context prompts)
-    summary = summarize_with_gpt(articles, role, query, domain, language)
+    # 2. Summarize with GPT (Enhanced AI Pipeline)
+    enhanced = summarize_with_gpt(articles, role, query, domain, language)
 
-    # 3. Extract sentiment (investor persona)
-    sentiment = _extract_sentiment(summary, role)
+    # 3. Extract sentiment (from the new enhanced lead)
+    sentiment = _extract_sentiment(enhanced, role)
 
     # 4. Related videos
     videos = _get_youtube_videos(query)
@@ -381,7 +379,7 @@ def get_news():
     sources = [{"title": a["title"], "source": a["source"], "url": a["url"]} for a in articles]
 
     return jsonify({
-        "summary": summary,
+        "enhanced": enhanced,  # New structured JSON (headlines, lead, key_points, insights)
         "articles": articles,
         "videos": videos,
         "sources": sources,
@@ -390,10 +388,10 @@ def get_news():
         "role": role,
         "domain": domain,
         "language": language,
-        "is_developing": False,
     })
 
 
+@app.route("/api/index/get-location", methods=["GET"])
 @app.route("/api/get-location", methods=["GET"])
 @app.route("/get-location", methods=["GET"])
 def get_location():
@@ -408,6 +406,7 @@ def get_location():
         return jsonify({"city": "Hyderabad", "region": "Telangana", "country_name": "India"})
 
 
+@app.route("/api/index/health", methods=["GET"])
 @app.route("/api/health", methods=["GET"])
 @app.route("/health", methods=["GET"])
 def health():
@@ -417,10 +416,9 @@ def health():
         "openai_configured": bool(OPENAI_API_KEY and OPENAI_API_KEY != "your_openai_api_key_here"),
     })
 
-
 if __name__ == "__main__":
-    print("\n🚀 AI Voice News Assistant — Backend Starting...")
+    print("\n🚀 NexBrief AI Backend Starting...")
     print(f"   NewsAPI Key: {'✅ Configured' if NEWSAPI_KEY and NEWSAPI_KEY != 'your_newsapi_key_here' else '❌ Missing'}")
     print(f"   OpenAI Key:  {'✅ Configured' if OPENAI_API_KEY and OPENAI_API_KEY != 'your_openai_api_key_here' else '❌ Missing'}")
     print(f"   Server:      http://localhost:5001\n")
-    app.run(debug=True, port=5001)
+    app.run(host="0.0.0.0", port=5001, debug=True)

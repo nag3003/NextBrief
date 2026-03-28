@@ -1,24 +1,24 @@
 import React from 'react';
 
 const ROLES = [
-  { id: 'all', emoji: '🌎', label: 'All' },
-  { id: 'student', emoji: '🎓', label: 'Student' },
-  { id: 'investor', emoji: '💼', label: 'Investor' },
-  { id: 'founder', emoji: '🚀', label: 'Founder' },
+  { id: 'all', emoji: '🌎' },
+  { id: 'student', emoji: '🎓' },
+  { id: 'investor', emoji: '💼' },
+  { id: 'founder', emoji: '🚀' },
 ];
 
-export default function RoleSelector({ role, onRoleChange }) {
+export default function RoleSelector({ role, onRoleChange, i18n }) {
   return (
-    <div className="role-selector" id="role-selector">
+    <div className="role-pill-container" id="role-selector">
       {ROLES.map((r) => (
         <button
           key={r.id}
           id={`role-btn-${r.id}`}
-          className={`role-selector__btn ${role === r.id ? 'role-selector__btn--active' : ''}`}
+          className={`role-btn ${role === r.id ? 'active' : ''}`}
           onClick={() => onRoleChange(r.id)}
         >
-          <span>{r.emoji}</span>
-          <span>{r.label}</span>
+          <span className="role-icon">{r.emoji}</span>
+          <span className="role-label">{i18n.roles[r.id]}</span>
         </button>
       ))}
     </div>

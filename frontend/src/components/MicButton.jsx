@@ -1,18 +1,17 @@
 import React from 'react';
 
-export default function MicButton({ isListening, isLoading, onToggle }) {
-  let label = 'Tap to ask';
-  if (isLoading) label = 'Processing…';
-  else if (isListening) label = 'Listening…';
-
+export default function MicButton({ isListening, isLoading, onToggle, label: propLabel }) {
+  let label = propLabel || 'Tap to ask';
+  if (isLoading) label = propLabel || 'Processing…';
+  else if (isListening) label = propLabel || 'Listening…';
   const handleMouseMove = (e) => {
     const btn = e.currentTarget;
     const rect = btn.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
-    const rotateX = -y / 4;
-    const rotateY = x / 4;
-    btn.style.transform = `perspective(500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.1)`;
+    const rotateX = -y / 10;
+    const rotateY = x / 10;
+    btn.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
   };
 
   const handleMouseLeave = (e) => {
@@ -30,33 +29,33 @@ export default function MicButton({ isListening, isLoading, onToggle }) {
         aria-label={isListening ? 'Stop listening' : 'Start listening'}
       >
         {/* Siri wave rings */}
-        {(isListening || isLoading) && (
-          <>
-            <span className="mic-orb__ring mic-orb__ring--1" />
-            <span className="mic-orb__ring mic-orb__ring--2" />
-            <span className="mic-orb__ring mic-orb__ring--3" />
-          </>
-        )}
+        <span className="mic-orb__ring mic-orb__ring--1" />
+        <span className="mic-orb__ring mic-orb__ring--2" />
+        <span className="mic-orb__ring mic-orb__ring--3" />
 
-        {/* Siri waveform bars (when listening) */}
-        {isListening ? (
-          <div className="mic-orb__waveform">
-            {[...Array(5)].map((_, i) => (
-              <span key={i} className="mic-orb__bar" style={{ animationDelay: `${i * 0.12}s` }} />
-            ))}
-          </div>
-        ) : isLoading ? (
+        {/* Dynamic Display */}
+        {isLoading ? (
           <div className="mic-orb__spinner">
             <div className="mic-orb__dot" style={{ '--d': '0s' }} />
             <div className="mic-orb__dot" style={{ '--d': '0.2s' }} />
             <div className="mic-orb__dot" style={{ '--d': '0.4s' }} />
           </div>
         ) : (
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mic-orb__svg">
-            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-            <line x1="12" y1="19" x2="12" y2="22"></line>
-          </svg>
+          <div className="mic-orb__inner">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mic-orb__svg">
+              {isListening ? (
+                <>
+                  <rect x="6" y="6" width="12" height="12" rx="2" fill="white" />
+                </>
+              ) : (
+                <>
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="22"></line>
+                </>
+              )}
+            </svg>
+          </div>
         )}
       </button>
 

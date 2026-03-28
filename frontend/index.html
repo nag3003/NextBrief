@@ -11,7 +11,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   </head>
   <body>
+    <div id="loading-fallback" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.2); font-family: sans-serif; pointer-events: none; z-index: 0;">
+      NexBrief AI News
+    </div>
     <div id="root"></div>
+    <script>
+      setTimeout(() => {
+        const root = document.getElementById('root');
+        if (root && root.innerHTML === '') {
+          console.error('App failed to load after 5 seconds.');
+          root.innerHTML = '<div style="padding: 40px; color: white; text-align: center;"><h1>Wait, NexBrief is taking longer than expected...</h1><p>If this persists, please refresh or check your connection.</p></div>';
+        }
+      }, 5000);
+    </script>
     <script type="module" src="src/main.jsx"></script>
   </body>
 </html>
