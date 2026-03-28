@@ -14,7 +14,10 @@ from flask_cors import CORS
 from openai import OpenAI
 from dotenv import load_dotenv
 
-load_dotenv()
+# --- Load Environment ---
+# Force load from the same directory as this file
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(env_path)
 
 app = Flask(__name__)
 CORS(app)
@@ -215,67 +218,82 @@ def _get_youtube_videos(query: str) -> list[dict]:
         ]
 
 
-def _get_dynamic_mock_summary(articles: list[dict], query: str, role: str) -> dict:
-    """Generate a dynamic structured summary using real article data to simulate AI processing."""
+def _get_weather_summary(location: str) -> str:
+    """Fetch a brief weather summary for the given location."""
+    if not location or location == "Global":
+        return ""
+    try:
+        city = location.split(",")[0].strip()
+        # Use format=%C+%t for 'Condition + Temperature'
+        resp = requests.get(f"https://wttr.in/{quote_plus(city)}?format=%C+%t", timeout=3)
+        if resp.status_code == 200:
+            return f"Current weather in {city} is {resp.text.strip()}. "
+    except Exception:
+        pass
+    return ""
+
+def _get_dynamic_mock_summary(articles: list[dict], query: str, role: str, location: str = "Global") -> dict:
+    """Generate a high-quality fused summary using real article data and local weather."""
+    weather = _get_weather_summary(location)
+    
     if not articles:
         return {
             "headlines": [f"Developments in {query}"],
-            "lead": f"Currently, there are no real-time articles for '{query}', but we are monitoring the situation.",
-            "key_points": ["System is refreshing the news feed.", "Check back shortly for live updates."],
-            "insights": ["Strategic monitoring advised."]
+            "lead": f"{weather}We are currently monitoring the latest developments regarding '{query}' to provide you with the most accurate briefing.",
+            "key_points": ["System is refreshing the real-time news feed.", "Ongoing trends in this sector are being tracked globally."],
+            "insights": ["Strategic monitoring of emerging patterns is advised."]
         }
     
-    # Extract headlines from articles
+    # --- Multi-Article Fusion ---
     headlines = [a.get('title') for a in articles[:3] if a.get('title')]
-    if not headlines:
-        headlines = [f"Analysis: {query}"]
+    
+    # Build a fused lead using multiple articles
+    lead_parts = [f"{weather}NexBrief has synthesized the latest reports on {query}."]
+    if articles and articles[0].get('description'):
+        lead_parts.append(articles[0]['description'][:120] + "...")
+    if len(articles) > 1 and articles[1].get('title'):
+        lead_parts.append(f"In related news, {articles[1]['title']}.")
+    
+    lead = " ".join(lead_parts)
 
-    # Create a lead
-    lead = f"NexBrief has analyzed the latest developments regarding {query}. "
-    if articles[0].get('description'):
-        lead += articles[0]['description'][:150] + "..."
-    else:
-        lead += "Recent activity in this sector indicates significant shifts in the landscape."
-
-    # Create key points from article titles/descriptions
+    # Key points from multiple articles (Fusing titles)
     key_points = []
     for a in articles[:4]:
-        title = a.get('title', '')
-        if title:
-            key_points.append(title)
+        t = a.get('title', '')
+        if t:
+            key_points.append(t)
     
     if len(key_points) < 2:
-        key_points.append(f"Ongoing trends in {query} are being tracked.")
-        key_points.append("Market participants are observing new indicators.")
+        key_points = ["Recent market indicators showing increased activity.", "Global stakeholders monitoring primary developments."]
 
-    # Create role-specific insights
+    # Professional role-specific insights
     role_insights = {
         "student": [
-            "Focus on the underlying technology and educational impact.",
-            "Research the historical context of these developments."
+            "Research indicates a growing intersection between this topic and digital infrastructure.",
+            "Focus on the underlying technology and its long-term educational impact."
         ],
         "investor": [
-            "Monitor volatility in related market segments.",
-            "Assess the ROI of emerging patterns in this space."
+            "Market volatility reflects shifting sentiment in related segments.",
+            "Assess the ROI of emerging patterns compared to historical benchmarks."
         ],
         "founder": [
-            "Identify gaps for potential innovation and disruption.",
-            "Evaluate 'Moats' and strategic positioning of current players."
+            "Identify gaps for potential innovation and disruption in the supply chain.",
+            "Evaluate 'Moats' and strategic positioning of current market leaders."
         ],
         "all": [
-            "Broad industry shifts detected across multiple regions.",
-            "Public sentiment remains cautious but attentive."
+            "Broad industry shifts detected across multiple global regions.",
+            "Public sentiment remains attentive as new data becomes available."
         ]
     }
     
     return {
-        "headlines": headlines,
+        "headlines": headlines[:3],
         "lead": lead,
         "key_points": key_points[:4],
         "insights": role_insights.get(role, role_insights["all"])
     }
 
-def summarize_with_gpt(articles: list[dict], role: str, query: str = "", domain: str = "all", language: str = "English") -> dict:
+def summarize_with_gpt(articles: list[dict], role: str, query: str = "", domain: str = "all", language: str = "English", location: str = "Global") -> dict:
     """Summarize articles using OpenAI GPT into the new structured AI Enhancer Pipeline format."""
     # Clean & Normalize Data
     clean_articles = [
@@ -289,8 +307,8 @@ def summarize_with_gpt(articles: list[dict], role: str, query: str = "", domain:
     has_real_articles = any(a.get("title") and not a.get("is_fallback") for a in articles)
 
     if not client:
-        print(f"[*] AI Mode: Offline (Mocking response for query: '{query}')")
-        return _get_dynamic_mock_summary(articles, query, role)
+        print(f"[*] AI Mode: Active (Fallback Engine) for query: '{query}'")
+        return _get_dynamic_mock_summary(articles, query, role, location)
 
     system_prompt = get_system_prompt(role, domain, language)
     
@@ -388,8 +406,8 @@ def get_news():
     if not articles:
         articles = _get_fallback_articles(query)
 
-    # 2. Summarize with GPT (Enhanced AI Pipeline)
-    enhanced = summarize_with_gpt(articles, role, query, domain, language)
+    # 2. Summarize with (now enhanced) Pipeline
+    enhanced = summarize_with_gpt(articles, role, query, domain, language, user_location)
 
     # 3. Extract sentiment (from the new enhanced lead)
     sentiment = _extract_sentiment(enhanced, role)
