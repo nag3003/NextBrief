@@ -1,0 +1,24 @@
+
+> frontend@1.0.0 dev
+> concurrently "npm run backend" "npm run frontend"
+
+[0] 
+[0] > frontend@1.0.0 backend
+[0] > cd "../backend" && python app.py
+[0] 
+[1] 
+[1] > frontend@1.0.0 frontend
+[1] > parcel index.html --port 5173 --no-cache
+[1] 
+[0] sh: line 0: cd: ../backend: Not a directory
+[0] npm run backend exited with code 1
+[1] Error: Operation not permitted
+[1]     at Object.open (/Users/nag/Desktop/hackthon pj/frontend/node_modules/lmdb/dist/index.cjs:2530:15)
+[1]     at new LMDBCache (/Users/nag/Desktop/hackthon pj/frontend/node_modules/@parcel/cache/lib/LMDBCache.js:60:34)
+[1]     at resolveOptions (/Users/nag/Desktop/hackthon pj/frontend/node_modules/@parcel/core/lib/resolveOptions.js:114:75)
+[1]     at async Parcel._init (/Users/nag/Desktop/hackthon pj/frontend/node_modules/@parcel/core/lib/Parcel.js:154:27)
+[1]     at async Parcel.watch (/Users/nag/Desktop/hackthon pj/frontend/node_modules/@parcel/core/lib/Parcel.js:244:7)
+[1]     at async run (/Users/nag/Desktop/hackthon pj/frontend/node_modules/parcel/lib/cli.js:335:9) {
+[1]   code: 1
+[1] }
+[1] npm run frontend exited with code 1

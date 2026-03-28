@@ -1,5 +1,5 @@
 #!/bin/sh
-'''exec' "/Users/nag/Desktop/hackthon pj/backend/venv/bin/python3" "$0" "$@"
+'''exec' "/Users/nag/Desktop/hackthon pj/backend/venv/bin/python3.13" "$0" "$@"
 ' '''
 # -*- coding: utf-8 -*-
 import re

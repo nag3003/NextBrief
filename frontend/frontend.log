@@ -1,0 +1,9 @@
+Error: Operation not permitted
+    at Object.open (/Users/nag/Desktop/hackthon pj/frontend/node_modules/lmdb/dist/index.cjs:2530:15)
+    at new LMDBCache (/Users/nag/Desktop/hackthon pj/frontend/node_modules/@parcel/cache/lib/LMDBCache.js:60:34)
+    at resolveOptions (/Users/nag/Desktop/hackthon pj/frontend/node_modules/@parcel/core/lib/resolveOptions.js:114:75)
+    at async Parcel._init (/Users/nag/Desktop/hackthon pj/frontend/node_modules/@parcel/core/lib/Parcel.js:154:27)
+    at async Parcel.watch (/Users/nag/Desktop/hackthon pj/frontend/node_modules/@parcel/core/lib/Parcel.js:244:7)
+    at async run (/Users/nag/Desktop/hackthon pj/frontend/node_modules/parcel/lib/cli.js:335:9) {
+  code: 1
+}
