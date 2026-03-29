@@ -34,25 +34,56 @@ export function startListening(onResult, onError, onEnd, language = 'English') {
 
   const recognition = new SpeechRecognition();
   recognition.lang = langMap[language] || 'en-US';
-  recognition.interimResults = false;
+  recognition.interimResults = true; // Enabled for better responsiveness
   recognition.maxAlternatives = 1;
   recognition.continuous = false;
 
+  let finalTranscript = '';
+
   recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    onResult?.(transcript);
+    let interimTranscript = '';
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        finalTranscript += event.results[i][0].transcript;
+      } else {
+        interimTranscript += event.results[i][0].transcript;
+      }
+    }
+    
+    const currentTranscript = finalTranscript || interimTranscript;
+    console.log('[Speech Interim] ', currentTranscript);
+    
+    // Optional: Pass interim results to UI if needed
+    // onInterimResult?.(currentTranscript);
+  };
+
+  recognition.onspeechend = () => {
+    console.log('[Speech] Speech ended, stopping recognition...');
+    recognition.stop();
   };
 
   recognition.onerror = (event) => {
-    console.warn('[Speech Error]', event.error);
+    console.error('[Speech Error]', event.error);
+    if (event.error === 'no-speech') {
+      console.warn('[Speech Error] No speech detected.');
+    } else if (event.error === 'not-allowed') {
+      console.error('[Speech Error] Microphone access denied.');
+    }
     onError?.(event.error);
   };
 
   recognition.onend = () => {
+    console.log('[Speech End] Final Transcript captured:', finalTranscript);
+    if (finalTranscript.trim()) {
+      onResult?.(finalTranscript.trim());
+    } else {
+      console.warn('[Speech End] No transcript captured.');
+    }
     onEnd?.();
   };
 
   recognition.start();
+  console.log('[Speech] Recognition started for language:', recognition.lang);
   return recognition;
 }
 
@@ -91,71 +122,75 @@ export function speakText(text, onEnd, language = 'English') {
   utterance.pitch = 1;
   utterance.volume = 1;
 
-  // Find best voice for language
-  let voices = window.speechSynthesis.getVoices();
-  let langCode = langMap[language] || 'en-US';
+  // Handle potential voice loading delay
+  const setVoiceAndSpeak = () => {
+    let voices = window.speechSynthesis.getVoices();
+    let langCode = langMap[language] || 'en-US';
 
-  const preferredFemaleVoices = [
-    'Google UK English Female', // Excellent clarity
-    'Google US English',        // Often female/clear
-    'Microsoft Zira',           // MS Female
-    'Microsoft Aria',           // MS Natural Female
-    'Samantha',                 // Mac default female
-    'Victoria',                 // Mac clear voice
-    'Karen'                     // Mac AU voice
-  ];
+    const preferredFemaleVoices = [
+      'Google UK English Female',
+      'Google US English',
+      'Microsoft Zira',
+      'Microsoft Aria',
+      'Samantha',
+      'Victoria',
+      'Karen'
+    ];
 
-  let selectedVoice = null;
+    let selectedVoice = null;
 
-  // 1. Try to find a high-quality female English voice
-  if (language === 'English') {
-    for (const name of preferredFemaleVoices) {
-      const voice = voices.find(v => v.name.includes(name));
-      if (voice) {
-        selectedVoice = voice;
-        break;
+    if (language === 'English') {
+      for (const name of preferredFemaleVoices) {
+        const voice = voices.find(v => v.name.includes(name));
+        if (voice) { selectedVoice = voice; break; }
       }
     }
-  }
 
-  // 2. Fallback: look for 'female' in the name for the target language
-  if (!selectedVoice) {
-    selectedVoice = voices.find(v => 
-      v.lang.startsWith(langCode.split('-')[0]) && 
-      v.name.toLowerCase().includes('female')
-    );
-  }
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v => 
+        v.lang.startsWith(langCode.split('-')[0]) && 
+        v.name.toLowerCase().includes('female')
+      );
+    }
 
-  // 3. Final Fallback: Original logic (Google, Microsoft, or first available)
-  if (!selectedVoice) {
-    selectedVoice = voices.find(v => v.lang === langCode && v.name.includes('Google')) ||
-                    voices.find(v => v.lang === langCode && v.name.includes('Microsoft')) ||
-                    voices.find(v => v.lang.startsWith(langCode.split('-')[0])) ||
-                    voices[0];
-  }
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v => v.lang === langCode && v.name.includes('Google')) ||
+                      voices.find(v => v.lang === langCode && v.name.includes('Microsoft')) ||
+                      voices.find(v => v.lang.startsWith(langCode.split('-')[0])) ||
+                      voices[0];
+    }
 
-  utterance.voice = selectedVoice || null;
-  utterance.lang = langCode;
+    utterance.voice = selectedVoice || null;
+    utterance.lang = langCode;
 
-  // Pronunciation Tuning for clarity
-  if (language !== 'English') {
-    utterance.rate = 0.92; // Slightly slower for better clarity
-    utterance.pitch = 1.05; // Slightly higher for more natural sound
-  } else {
-    // English pronunciation tuning
-    utterance.rate = 0.95; // 5% slower for clearer enunciation
-    utterance.pitch = 1.05; // Slightly higher pitch for female tuning
-  }
+    if (language !== 'English') {
+      utterance.rate = 0.92;
+      utterance.pitch = 1.05;
+    } else {
+      utterance.rate = 0.95;
+      utterance.pitch = 1.05;
+    }
 
-  utterance.onstart = () => { window.isSpeaking = true; };
-  utterance.onend = () => {
-    window.isSpeaking = false;
-    onEnd?.();
+    utterance.onstart = () => { window.isSpeaking = true; };
+    utterance.onend = () => {
+      window.isSpeaking = false;
+      onEnd?.();
+    };
+    utterance.onerror = (event) => {
+      console.error('[Speech Error]', event);
+      window.isSpeaking = false;
+      onEnd?.();
+    };
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
   };
 
-  // Cancel any ongoing speech before starting a new one
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
+  if (window.speechSynthesis.getVoices().length === 0) {
+    window.speechSynthesis.addEventListener('voiceschanged', setVoiceAndSpeak, { once: true });
+  } else {
+    setVoiceAndSpeak();
+  }
 }
 
 export function stopSpeaking() {

@@ -434,14 +434,17 @@ export default function App() {
   const handleQuery = useCallback(async (q, overrideLoc = location, overrideDomain) => {
     const activeDomain = overrideDomain || domain;
     const activeLoc = overrideLoc || location;
-    const city = activeLoc.split(',')[0].trim();
+    
+    // Safety check: location must be a string
+    const locStr = typeof activeLoc === 'string' ? activeLoc : 'Global';
+    const city = locStr.split(',')[0].trim();
 
     // Build a smart query: if user typed nothing, derive from domain + location
     const DOMAIN_QUERIES = {
       all: city !== 'Global' ? `latest news near ${city}` : 'latest news',
       india: 'India latest news today',
       world: 'world international news today',
-      local: `${activeLoc} local news today`,
+      local: city !== 'Global' ? `${locStr} local news today` : 'local news',
       business: city !== 'Global' ? `business finance news ${city}` : 'business finance market news',
       technology: 'technology AI software news',
       entertainment: city !== 'Global' ? `entertainment arts news ${city}` : 'entertainment movies arts news',
@@ -639,19 +642,31 @@ export default function App() {
   // --- Mic toggle ---
   const handleMicToggle = useCallback(() => {
     if (listening) {
+      console.log('[Mic] Aborting recognition...');
       recognitionRef.current?.abort();
       setListening(false);
       return;
     }
+    
     setListening(true);
     setError('');
+    console.log('[Mic] Starting recognition...');
+    
     recognitionRef.current = startListening(
-      (transcript) => { setListening(false); handleQuery(transcript); },
+      (transcript) => { 
+        console.log('[Mic] Result received:', transcript);
+        setListening(false); 
+        handleQuery(transcript); 
+      },
       (err) => {
+        console.error('[Mic] Error:', err);
         setListening(false);
         if (err === 'not-allowed') setError('Microphone access denied.');
       },
-      () => setListening(false),
+      () => {
+        console.log('[Mic] Recognition ended.');
+        setListening(false);
+      },
       selectedLanguage
     );
   }, [listening, handleQuery, selectedLanguage]);
@@ -721,14 +736,16 @@ export default function App() {
             </div>
           )}
 
-          <button className="briefing-button" onClick={() => setShowSaved(true)}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <rect x="3" y="4" width="18" height="11" rx="2" />
-              <path d="M7 19h10M12 15v4" />
-            </svg>
-            {I18N[selectedLanguage]?.btn?.briefing || 'Briefings'}
-            {savedItems?.length > 0 && <span className="briefing-count">{savedItems.length}</span>}
-          </button>
+          <div className="header__actions">
+            <button className="briefing-button" onClick={() => setShowSaved(true)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <rect x="3" y="4" width="18" height="11" rx="2" />
+                <path d="M7 19h10M12 15v4" />
+              </svg>
+              <span className="btn-text">{I18N[selectedLanguage]?.btn?.briefing || 'Briefings'}</span>
+              {savedItems?.length > 0 && <span className="briefing-count">{savedItems.length}</span>}
+            </button>
+          </div>
 
           <div className="language-selector">
             {LANGUAGE_OPTIONS && Array.isArray(LANGUAGE_OPTIONS) && LANGUAGE_OPTIONS.map((lang) => (
@@ -771,6 +788,7 @@ export default function App() {
           isLoading={loading} 
           onToggle={handleMicToggle}
           label={loading ? (I18N[selectedLanguage]?.mic?.processing || 'Processing...') : (listening ? (I18N[selectedLanguage]?.mic?.listening || 'Listening...') : (I18N[selectedLanguage]?.mic?.initial || 'Tap to ask'))} 
+          variant="large"
         />
 
         <div className="query-input-section">

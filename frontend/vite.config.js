@@ -6,9 +6,11 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/get-news': 'http://localhost:5001',
-      '/get-location': 'http://localhost:5001',
-      '/health': 'http://localhost:5001',
+      '/api': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      }
     }
   }
 });

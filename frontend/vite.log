@@ -26,3 +26,183 @@
     at async Object.build (file:///Users/nag/Desktop/hackthon%20pj/frontend/node_modules/vite/dist/node/chunks/node.js:30598:3)
     at async scan (file:///Users/nag/Desktop/hackthon%20pj/frontend/node_modules/vite/dist/node/chunks/node.js:30543:4)
     at async file:///Users/nag/Desktop/hackthon%20pj/frontend/node_modules/vite/dist/node/chunks/node.js:23113:15
+6:23:01 PM [vite] (client) ✨ new dependencies optimized: react-dom/client, react-hot-toast, socket.io-client
+6:23:01 PM [vite] (client) ✨ optimized dependencies changed. reloading
+6:23:09 PM [vite] (client) [console.error] [Fetch Error] Error: API error: 404
+    at fetchNewsSummary (http://localhost:5173/src/utils/api.js:18:9)
+    at async http://localhost:5173/src/App.jsx:714:17
+6:23:11 PM [vite] (client) [console.error] [Fetch Error] Error: API error: 404
+    at fetchNewsSummary (http://localhost:5173/src/utils/api.js:18:9)
+    at async http://localhost:5173/src/App.jsx:714:17
+6:23:53 PM [vite] vite.config.js changed, restarting server...
+6:23:53 PM [vite] server restarted.
+6:23:54 PM [vite] http proxy error: /get-news
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+6:23:54 PM [vite] (client) [console.error] [Fetch Error] Error: API error: 502
+    at fetchNewsSummary (http://localhost:5173/src/utils/api.js:18:9)
+    at async http://localhost:5173/src/App.jsx:714:17
+6:25:02 PM [vite] (client) [console.error] [Fetch Error] TypeError: Failed to fetch
+    at fetchNewsSummary (http://localhost:5173/src/utils/api.js:6:25)
+    at http://localhost:5173/src/App.jsx:714:23
+    at startWithLocation (http://localhost:5173/src/App.jsx:833:4)
+    at http://localhost:5173/src/App.jsx:837:3
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:12904:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:851:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:6617:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:6652:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:7618:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:7606:5)
+6:25:43 PM [vite] (client) [console.error] Internal React error: Expected static flag was missing. Please notify the React team.
+6:26:20 PM [vite] (client) [console.error] Internal React error: Expected static flag was missing. Please notify the React team.
+6:26:24 PM [vite] (client) [console.error] [Speech Error] {"isTrusted":true}
+6:26:30 PM [vite] (client) [console.error] [Speech Error] {"isTrusted":true}
+6:26:37 PM [vite] (client) [console.error] [Speech Error] {"isTrusted":true}
+6:26:39 PM [vite] (client) [console.error] [Speech Error] {"isTrusted":true}
+6:26:40 PM [vite] (client) [console.error] [Speech Error] {"isTrusted":true}
+6:27:05 PM [vite] (client) [console.error] [Speech Error] {"isTrusted":true}
+6:27:08 PM [vite] (client) [console.error] [Speech Error] {"isTrusted":true}
+6:27:35 PM [vite] (client) [console.error] [Speech Error] {"isTrusted":true}
+6:27:43 PM [vite] (client) hmr update /src/App.jsx
+6:27:49 PM [vite] (client) hmr update /src/App.jsx
+6:27:56 PM [vite] (client) hmr update /src/components/MicButton.jsx
+6:28:05 PM [vite] (client) hmr update /src/index.css
+6:28:18 PM [vite] (client) hmr update /src/index.css
+6:28:34 PM [vite] (client) hmr update /src/index.css
+6:30:08 PM [vite] (client) hmr update /src/components/ResponsePanel.jsx
+6:30:17 PM [vite] (client) hmr update /src/index.css
+6:30:53 PM [vite] (client) [console.warn] [Speech Error] network
+6:31:01 PM [vite] (client) [console.error] Internal React error: Expected static flag was missing. Please notify the React team.
+6:31:06 PM [vite] (client) [console.error] [Speech Error] {"isTrusted":true}
+6:31:27 PM [vite] (client) hmr update /src/App.jsx
+6:31:40 PM [vite] (client) hmr update /src/index.css
+6:32:24 PM [vite] (client) [console.warn] [Speech Error] network
+6:32:24 PM [vite] (client) [console.warn] [Speech Error] network
+6:32:25 PM [vite] (client) [console.warn] [Speech Error] aborted
+6:32:25 PM [vite] (client) [console.warn] [Speech Error] aborted
+6:32:26 PM [vite] (client) [console.warn] [Speech Error] aborted
+6:32:26 PM [vite] (client) [console.warn] [Speech Error] aborted
+6:32:28 PM [vite] (client) [console.warn] [Speech Error] network
+6:32:29 PM [vite] (client) hmr update /src/components/ResponsePanel.jsx
+6:32:29 PM [vite] (client) [console.warn] [Speech Error] network
+6:32:30 PM [vite] (client) [console.warn] [Speech Error] network
+6:32:33 PM [vite] (client) [console.warn] [Speech Error] network
+6:32:37 PM [vite] (client) hmr update /src/index.css
+6:32:52 PM [vite] (client) [console.error] Internal React error: Expected static flag was missing. Please notify the React team.
+6:32:52 PM [vite] (client) [console.error] [Speech Error] {"isTrusted":true}
+6:33:01 PM [vite] (client) [console.warn] [Speech Error] network
+6:34:09 PM [vite] (client) hmr update /src/App.jsx
+6:34:16 PM [vite] (client) hmr update /src/App.jsx
+6:37:33 PM [vite] (client) hmr update /src/components/MicButton.jsx
+6:37:35 PM [vite] (client) [console.error] [Speech Error] {"isTrusted":true}
+6:37:40 PM [vite] (client) [console.error] [Speech Error] {"isTrusted":true}
+6:37:50 PM [vite] (client) hmr update /src/index.css
+6:38:10 PM [vite] (client) [console.error] [Speech Error] network
+6:38:11 PM [vite] (client) [console.error] [Speech Error] network
+6:38:12 PM [vite] (client) [console.error] [Speech Error] network
+6:38:13 PM [vite] (client) [console.error] [Speech Error] network
+6:38:14 PM [vite] (client) [console.error] [Speech Error] network
+6:38:15 PM [vite] (client) [console.error] [Speech Error] network
+6:38:16 PM [vite] (client) [console.error] [Speech Error] network
+6:38:18 PM [vite] (client) [console.error] [Speech Error] network
+6:38:48 PM [vite] (client) [console.error] [Speech Error] network
+6:39:05 PM [vite] (client) hmr update /src/App.jsx
+6:39:13 PM [vite] (client) hmr update /src/App.jsx
+6:39:31 PM [vite] (client) [console.error] [Speech Error] network
+6:39:31 PM [vite] (client) [console.error] [Mic] Error: network
+6:39:31 PM [vite] (client) [console.warn] [Speech End] No transcript captured.
+6:39:32 PM [vite] (client) [console.error] [Speech Error] network
+6:39:32 PM [vite] (client) [console.error] [Mic] Error: network
+6:39:32 PM [vite] (client) [console.warn] [Speech End] No transcript captured.
+6:39:33 PM [vite] (client) [console.error] [Speech Error] network
+6:39:33 PM [vite] (client) [console.error] [Mic] Error: network
+6:39:33 PM [vite] (client) [console.warn] [Speech End] No transcript captured.
+6:39:36 PM [vite] (client) [console.error] [Speech Error] network
+6:39:36 PM [vite] (client) [console.error] [Mic] Error: network
+6:39:36 PM [vite] (client) [console.warn] [Speech End] No transcript captured.
+6:39:40 PM [vite] (client) hmr update /src/components/MicButton.jsx
+6:39:47 PM [vite] (client) hmr update /src/index.css
+6:40:06 PM [vite] (client) [console.error] Internal React error: Expected static flag was missing. Please notify the React team.
+6:41:21 PM [vite] (client) [console.error] [Speech Error] network
+6:41:21 PM [vite] (client) [console.error] [Mic] Error: network
+6:41:21 PM [vite] (client) [console.warn] [Speech End] No transcript captured.
+6:41:22 PM [vite] (client) [console.error] [Speech Error] network
+6:41:22 PM [vite] (client) [console.error] [Mic] Error: network
+6:41:22 PM [vite] (client) [console.warn] [Speech End] No transcript captured.
+6:41:24 PM [vite] (client) [console.error] [Speech Error] network
+6:41:24 PM [vite] (client) [console.error] [Mic] Error: network
+6:41:24 PM [vite] (client) [console.warn] [Speech End] No transcript captured.
+6:41:25 PM [vite] (client) [console.error] [Speech Error] network
+6:41:25 PM [vite] (client) [console.error] [Mic] Error: network
+6:41:25 PM [vite] (client) [console.warn] [Speech End] No transcript captured.
+6:45:48 PM [vite] (client) [console.warn] [Weather Error] TypeError: Failed to fetch
+    at http://localhost:5173/src/App.jsx?t=1774703380130:670:22
+    at startWithLocation (http://localhost:5173/src/App.jsx?t=1774703380130:834:4)
+    at http://localhost:5173/src/App.jsx?t=1774703380130:837:3
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:12904:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:851:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:6617:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:6652:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:7618:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:7606:5)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:7622:6)
+6:45:50 PM [vite] (client) [console.error] Internal React error: Expected static flag was missing. Please notify the React team.
+6:46:20 PM [vite] (client) [console.warn] [Weather Error] TypeError: Failed to fetch
+    at http://localhost:5173/src/App.jsx?t=1774703380130:670:22
+    at startWithLocation (http://localhost:5173/src/App.jsx?t=1774703380130:834:4)
+    at http://localhost:5173/src/App.jsx?t=1774703380130:837:3
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:12904:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:851:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:6617:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:6652:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:7618:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:7606:5)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e60bfb65:7622:6)
+6:46:22 PM [vite] (client) [console.error] Internal React error: Expected static flag was missing. Please notify the React team.
+4:28:32 PM [vite] (client) hmr update /src/App.jsx
+4:28:32 PM [vite] (client) hmr update /src/components/MicButton.jsx
+4:28:32 PM [vite] (client) hmr update /src/components/ResponsePanel.jsx
+4:28:32 PM [vite] (client) hmr update /src/index.css
+4:28:33 PM [vite] (client) hmr update /src/App.jsx
+4:39:27 PM [vite] http proxy error: /health
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+4:39:47 PM [vite] http proxy error: /health
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+4:39:48 PM [vite] http proxy error: /health
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+4:39:48 PM [vite] http proxy error: /health
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+4:39:50 PM [vite] http proxy error: /health
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+4:39:52 PM [vite] http proxy error: /health
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+4:39:52 PM [vite] http proxy error: /health
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+4:39:52 PM [vite] http proxy error: /health
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+4:39:53 PM [vite] http proxy error: /health
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+4:41:54 PM [vite] http proxy error: /health
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+4:46:56 PM [vite] (client) [console.error] Internal React error: Expected static flag was missing. Please notify the React team.

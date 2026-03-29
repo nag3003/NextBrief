@@ -199,7 +199,6 @@ export default function ResponsePanel({ data, isSpeaking, onSpeakToggle, onSave,
   return (
     <div className="response-container" id="response-panel">
       <div className={`summary-card ${enhanced ? 'summary-card--ai' : ''}`}>
-        {enhanced && <div className="ai-scanner" />}
         <div className="summary-card__header">
           <div className="summary-card__title-row">
             <span className="summary-card__icon">
@@ -299,9 +298,25 @@ export default function ResponsePanel({ data, isSpeaking, onSpeakToggle, onSave,
           <h2 className="news-section__title">🎬 Related Analysis</h2>
           <div className="videos-grid">
             {videos && Array.isArray(videos) && videos.map((v, i) => (
-              <div key={i} className="video-card">
-                {v.videoId && <iframe width="100%" height="160" src={`https://www.youtube.com/embed/${v.videoId}`} frameBorder="0" allowFullScreen></iframe>}
-                <div className="video-card__info"><span className="video-card__title">{v.title}</span></div>
+              <div 
+                key={i} 
+                className="video-card" 
+                onClick={() => window.open(`https://www.youtube.com/watch?v=${v.videoId}`, '_blank')}
+              >
+                <div className="video-card__thumbnail">
+                  <img 
+                    src={`https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg`} 
+                    alt={v.title} 
+                  />
+                  <div className="video-card__play-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="video-card__info">
+                  <span className="video-card__title">{v.title}</span>
+                </div>
               </div>
             ))}
           </div>

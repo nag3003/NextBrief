@@ -4,6 +4,7 @@ Fetches news via NewsAPI, summarizes with OpenAI GPT, personalized by role.
 """
 
 import os
+import json
 import requests
 import re
 import urllib.request
@@ -28,11 +29,23 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 NEWSAPI_URL = "https://newsapi.org/v2/everything"
 
 if OPENAI_API_KEY and OPENAI_API_KEY != "your_openai_api_key_here":
+    print(f"[*] OpenAI API Key detected. Initializing client...", flush=True)
     if OPENAI_API_KEY.startswith("sk-or-v1-"):
-        client = OpenAI(api_key=OPENAI_API_KEY, base_url="https://openrouter.ai/api/v1")
+        print(f"[*] OpenRouter mode active.", flush=True)
+        # OpenRouter-specific initialization
+        client = OpenAI(
+            api_key=OPENAI_API_KEY, 
+            base_url="https://openrouter.ai/api/v1",
+            default_headers={
+                "HTTP-Referer": "https://nexbrief.vercel.app",
+                "X-Title": "NexBrief AI"
+            }
+        )
     else:
+        print(f"[*] Direct OpenAI mode active.", flush=True)
         client = OpenAI(api_key=OPENAI_API_KEY)
 else:
+    print(f"[*] No valid OpenAI API Key found. Client disabled.", flush=True)
     client = None
 
 def get_system_prompt(role: str, domain: str, language: str) -> str:
@@ -246,7 +259,9 @@ def _get_dynamic_mock_summary(articles: list[dict], query: str, role: str, locat
     
     # --- Multi-Article Fusion ---
     headlines = [a.get('title') for a in articles[:3] if a.get('title')]
-    
+    if not headlines:
+        headlines = [f"Analysis: {query}"]
+
     # Build a fused lead using multiple articles
     lead_parts = [f"{weather}NexBrief has synthesized the latest reports on {query}."]
     if articles and articles[0].get('description'):
@@ -264,7 +279,10 @@ def _get_dynamic_mock_summary(articles: list[dict], query: str, role: str, locat
             key_points.append(t)
     
     if len(key_points) < 2:
-        key_points = ["Recent market indicators showing increased activity.", "Global stakeholders monitoring primary developments."]
+        key_points = [
+            "System is refreshing the real-time news feed.",
+            f"Ongoing trends in {query} are being tracked globally."
+        ]
 
     # Professional role-specific insights
     role_insights = {
@@ -313,16 +331,19 @@ def summarize_with_gpt(articles: list[dict], role: str, query: str = "", domain:
     system_prompt = get_system_prompt(role, domain, language)
     
     if has_real_articles:
-        user_prompt = f"Articles to summarize:\n{clean_articles}\n\nClient Query: {query}"
+        user_prompt = f"Articles to summarize:\n{clean_articles}\n\nClient Query: {query}\nUser Location: {location}"
     else:
         user_prompt = (
-            f"No specific news articles found for: '{query}'. "
-            f"Using your professional knowledge, provide a structured 'NexBrief' report for a {role} regarding this topic."
+            f"No specific news articles found for: '{query}' in {location}. "
+            f"Using your professional knowledge, provide a structured 'NexBrief' report for a {role} regarding this topic as it applies to their region ({location})."
         )
 
     try:
+        model_name = "openai/gpt-4o-mini" if OPENAI_API_KEY.startswith("sk-or-v1-") else "gpt-4o-mini"
+        print(f"[*] AI summary request: Model={model_name}, Role={role}, Language={language} | Articles={len(articles)}", flush=True)
+        
         response = client.chat.completions.create(
-            model="openai/gpt-4o-mini" if OPENAI_API_KEY.startswith("sk-or-v1-") else "gpt-4o-mini",
+            model=model_name,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
@@ -331,21 +352,29 @@ def summarize_with_gpt(articles: list[dict], role: str, query: str = "", domain:
             temperature=0.3,
             response_format={"type": "json_object"}
         )
-        import json
         content = response.choices[0].message.content.strip()
+        print(f"[*] AI Response received ({len(content)} chars)", flush=True)
+        
         try:
             parsed = json.loads(content)
             # Ensure all keys exist
             for key in ["headlines", "lead", "key_points", "insights"]:
                 if key not in parsed:
                     parsed[key] = [] if key != "lead" else ""
+            
+            # If AI returned a JSON that says it's offline (sometimes happens with system prompts)
+            # We want to catch that here if it's literally the string
+            if "offline" in str(parsed.get("lead", "")).lower():
+                 print("[*] AI returned an 'offline' message in JSON. Forcing fallback summary.")
+                 return _get_dynamic_mock_summary(articles, query, role, location)
+
             return parsed
         except json.JSONDecodeError:
-            print(f"[AI Pipeline Error] Invalid JSON from AI: {content}")
-            return _get_dynamic_mock_summary(articles, query, role)
+            print(f"[AI Pipeline Error] Invalid JSON from AI: {content[:100]}...", flush=True)
+            return _get_dynamic_mock_summary(articles, query, role, location)
     except Exception as e:
-        print(f"[AI Pipeline Error] {e}")
-        return _get_dynamic_mock_summary(articles, query, role)
+        print(f"[AI Pipeline Error] OpenAI Call Failed: {str(e)}", flush=True)
+        return _get_dynamic_mock_summary(articles, query, role, location)
 
 
 def _extract_sentiment(summary_obj: dict, role: str) -> dict:
@@ -450,10 +479,27 @@ def get_location():
 @app.route("/api/health", methods=["GET"])
 @app.route("/health", methods=["GET"])
 def health():
+    openai_ok = False
+    openai_error = None
+    if client:
+        try:
+            # Quick token-efficient test call
+            client.chat.completions.create(
+                model="openai/gpt-4o-mini" if OPENAI_API_KEY.startswith("sk-or-v1-") else "gpt-4o-mini",
+                messages=[{"role": "user", "content": "ping"}],
+                max_tokens=1
+            )
+            openai_ok = True
+        except Exception as e:
+            openai_error = str(e)
+            
     return jsonify({
         "status": "ok",
         "newsapi_configured": bool(NEWSAPI_KEY and NEWSAPI_KEY != "your_newsapi_key_here"),
         "openai_configured": bool(OPENAI_API_KEY and OPENAI_API_KEY != "your_openai_api_key_here"),
+        "openai_live": openai_ok,
+        "openai_error": openai_error,
+        "environment": "Vercel" if os.getenv("VERCEL") else "Local"
     })
 
 if __name__ == "__main__":

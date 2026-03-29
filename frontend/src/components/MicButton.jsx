@@ -1,9 +1,33 @@
 import React from 'react';
 
-export default function MicButton({ isListening, isLoading, onToggle, label: propLabel }) {
+export default function MicButton({ isListening, isLoading, onToggle, label: propLabel, variant = 'large' }) {
   let label = propLabel || 'Tap to ask';
   if (isLoading) label = propLabel || 'Processing…';
   else if (isListening) label = propLabel || 'Listening…';
+  
+  if (variant === 'compact') {
+    return (
+      <button
+        className={`mic-orb-compact ${isListening ? 'listening' : ''} ${isLoading ? 'processing' : ''}`}
+        onClick={onToggle}
+        aria-label={isListening ? 'Stop listening' : 'Start listening'}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          {isListening ? (
+            <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />
+          ) : (
+            <>
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="22"></line>
+            </>
+          )}
+        </svg>
+        {isListening && <span className="mic-orb-compact__pulse" />}
+      </button>
+    );
+  }
+
   const handleMouseMove = (e) => {
     const btn = e.currentTarget;
     const rect = btn.getBoundingClientRect();
@@ -28,7 +52,23 @@ export default function MicButton({ isListening, isLoading, onToggle, label: pro
         onMouseLeave={handleMouseLeave}
         aria-label={isListening ? 'Stop listening' : 'Start listening'}
       >
-        {/* Siri wave rings */}
+        {/* Siri wave rings & Fluid layers */}
+        <div className="mic-orb__siri-waves">
+          <div className="mic-orb__wave mic-orb__wave--1" />
+          <div className="mic-orb__wave mic-orb__wave--2" />
+          <div className="mic-orb__wave mic-orb__wave--3" />
+          <div className="mic-orb__wave mic-orb__wave--4" />
+        </div>
+
+        {/* Dynamic Waveform Bars */}
+        {isListening && (
+          <div className="mic-orb__waveform">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="mic-orb__bar" style={{ animationDelay: `${i * 0.1}s` }} />
+            ))}
+          </div>
+        )}
+        
         <span className="mic-orb__ring mic-orb__ring--1" />
         <span className="mic-orb__ring mic-orb__ring--2" />
         <span className="mic-orb__ring mic-orb__ring--3" />
