@@ -470,8 +470,13 @@ export default function App() {
         speakText(data.enhanced.lead, () => setSpeaking(false), selectedLanguage);
       }
     } catch (err) {
-      console.error('[Fetch Error]', err);
-      setError('Could not reach the AI backend. Please verify your connection or API configuration.');
+      console.error('[Fetch Error Detail]', {
+        message: err.message,
+        stack: err.stack,
+        url: window.location.href,
+        api_base: '/api'
+      });
+      setError(`Could not reach the AI backend. ${err.message}. Please verify your connection or API configuration.`);
     } finally {
       setLoading(false);
     }

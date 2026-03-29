@@ -21,7 +21,18 @@ env_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(env_path)
 
 app = Flask(__name__)
-CORS(app)
+# Robust CORS configuration for both local and production environments
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+
+# Global error handler for JSON responses
+@app.errorhandler(Exception)
+def handle_exception(e):
+    print(f"[GLOBAL BACKEND ERROR] {str(e)}", flush=True)
+    return jsonify({
+        "error": "Internal Server Error",
+        "message": str(e),
+        "status": 500
+    }), 500
 
 # --- Config ---
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY", "")

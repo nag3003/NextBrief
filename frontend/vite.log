@@ -206,3 +206,5 @@ AggregateError [ECONNREFUSED]:
     at internalConnectMultiple (node:net:1134:18)
     at afterConnectMultiple (node:net:1715:7)
 4:46:56 PM [vite] (client) [console.error] Internal React error: Expected static flag was missing. Please notify the React team.
+4:54:21 PM [vite] (client) hmr update /src/App.jsx
+4:54:52 PM [vite] (client) hmr update /src/App.jsx
